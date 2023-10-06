@@ -53,21 +53,23 @@ mod tests {
             .y_label_area_size(30)//y軸ラベル部分の余白
             .build_cartesian_2d(
                 0..input_data.shape()[0],//x軸の設定
-                -2.*max..2.*max//y軸の設定
+                -1.5*max..1.5*max//y軸の設定
             ).unwrap();
         
         //x軸y軸、グリッド線など描画
         chart.configure_mesh().draw().unwrap();
         //データの描画。(x, y)のイテレータとしてデータ点を渡す。
-        let line_series = LineSeries::new(
+        let point_series = PointSeries::<_, _, Circle<_, _>, _>::new(
             input_data.iter().enumerate().map(|(i, x)| (i, *x)),
+            2,
             &RED,
         );
-        chart.draw_series(line_series).unwrap();
-        let line_series = LineSeries::new(
+        chart.draw_series(point_series).unwrap();
+        let point_series = PointSeries::<_, _, Circle<_, _>, _>::new(
             ista_result.iter().enumerate().map(|(i, x)| (i, *x)),
+            2,
             &BLUE,
         );
-        chart.draw_series(line_series).unwrap();
+        chart.draw_series(point_series).unwrap();
     }
 }
