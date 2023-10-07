@@ -25,8 +25,12 @@ impl LassoIstaLipshitzSearch {
 impl Lasso for LassoIstaLipshitzSearch {
     fn solve(&self, mat: &Array2<f64>, y: &Array1<f64>) -> Result<Array1<f64>> {
         //check data
-        if mat.shape()[0] != y.shape()[0] { return Err(anyhow!("mat's row size and y's size are different.")); }
-        if mat.shape()[0] > mat.shape()[1] { return Err(anyhow!("mat's row size is bigger than its column size.")); }
+        if mat.shape()[0] != y.shape()[0] {
+            return Err(anyhow!("mat's row size and y's size are different."));
+        }
+        if mat.shape()[0] > mat.shape()[1] {
+            return Err(anyhow!("mat's row size is bigger than its column size."));
+        }
 
         //initialization
         let mut x = mat.t().dot(y);
@@ -45,7 +49,9 @@ impl Lasso for LassoIstaLipshitzSearch {
             //vでの二次関数の値
             let mut temp = 0.5 * (y - mat.dot(&v)).norm_l2().powi(2);
             //vでのprev_x起点のメジャライザーの値
-            let mut m_temp = prev_temp + grad_x.t().dot(&(&v - &prev_x)) + 0.5 * lipshitz * (&v - &prev_x).norm_l2().powi(2);
+            let mut m_temp = prev_temp
+                + grad_x.t().dot(&(&v - &prev_x))
+                + 0.5 * lipshitz * (&v - &prev_x).norm_l2().powi(2);
             //二次関数部分のメジャライザーが二次関数より小さいことはないのでもしそうなったらlipshitzを大きな値に更新
             while m_temp < temp {
                 lipshitz = lipshitz * 1.1;
@@ -55,12 +61,15 @@ impl Lasso for LassoIstaLipshitzSearch {
 
                 //その地点での二次関数と目じゃライザーの値を計算
                 temp = 0.5 * (y - mat.dot(&v)).norm_l2().powi(2);
-                m_temp = prev_temp + grad_x.t().dot(&(&v - &prev_x)) + 0.5 * lipshitz * (&v - &prev_x).norm_l2().powi(2);
-
+                m_temp = prev_temp
+                    + grad_x.t().dot(&(&v - &prev_x))
+                    + 0.5 * lipshitz * (&v - &prev_x).norm_l2().powi(2);
             }
 
-            x = st_array1(self.lambda/ lipshitz, &v);
-            if (prev_x - x.clone()).norm_l2() < self.threshold { break; }
+            x = st_array1(self.lambda / lipshitz, &v);
+            if (prev_x - x.clone()).norm_l2() < self.threshold {
+                break;
+            }
         }
 
         Ok(x)
