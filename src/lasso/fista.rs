@@ -37,7 +37,7 @@ impl Lasso for LassoFista {
         let mut preve_x;
         let mut z = mat.t().dot(y);
         let mut prev_z;
-        let lipshitz = matrix_l2(&mat.t().dot(mat))/ self.lambda;
+        let lipshitz = matrix_l2(&mat.t().dot(mat)) / self.lambda;
         let mut beta = 0.;
         let mut prev_beta;
 

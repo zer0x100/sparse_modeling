@@ -8,9 +8,9 @@ mod ista;
 mod ista_lipshitz_search;
 
 use crate::prelude::*;
+pub use fista::LassoFista;
 pub use ista::LassoIsta;
 pub use ista_lipshitz_search::LassoIstaLipshitzSearch;
-pub use fista::LassoFista;
 
 pub trait Lasso {
     fn solve(&self, mat: &Array2<f64>, y: &Array1<f64>) -> Result<Array1<f64>>;

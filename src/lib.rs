@@ -1,22 +1,24 @@
 mod data_convert;
-mod dft;
 mod gen_signal;
 mod lasso;
 mod math_func;
+mod mk_matrix;
 
 mod prelude {
     pub use crate::data_convert::*;
-    pub use crate::dft::*;
     pub use crate::gen_signal::*;
     pub use crate::lasso::*;
     pub use crate::math_func::*;
+    pub use crate::mk_matrix::*;
     pub use anyhow::{anyhow, Result};
-    pub use ndarray::{array, Array, Array1, Array2};
+    pub use ndarray::{array, s, Array, Array1, Array2, Slice};
     pub use ndarray_linalg::{c64, generate, svd::SVD, Norm, Scalar};
     pub use rand::{
         distributions::{Distribution, Uniform},
         Rng,
     };
+    pub use plotters::prelude::*;
+    pub use std::cmp;
     pub use std::{f64::consts::PI, fs};
 }
 
@@ -26,7 +28,6 @@ use crate::prelude::*;
 mod tests {
     use super::*;
     use crate::prelude::*;
-    use plotters::prelude::*;
 
     #[test]
     fn ista_fista_test() {
@@ -88,6 +89,14 @@ mod tests {
             &GREEN,
         );
         chart.draw_series(point_series).unwrap();
+    }
 
+    #[test]
+    fn math_func_test() {
+        std::env::set_var("RUST_BACKTRACE", "1");
+
+        let a = array![[1., 1., 1.], [1., 2., 3.],];
+        assert_eq!(0.9899494936611665, mutal_coherence(&a));
+        assert_eq!(0.9899494936611665, babel_func(&a, 1).unwrap());
     }
 }

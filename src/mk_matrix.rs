@@ -1,3 +1,4 @@
+
 use crate::prelude::*;
 
 //Wn_{i, j} = exp(-2*pi/n*i*j)
@@ -11,7 +12,7 @@ pub fn mk_dft_mat(n: usize) -> Array2<c64> {
             ft_matrix[[i, j]] = c64 {
                 re: f64::cos(theta * i as f64 * j as f64),
                 im: f64::sin(theta * i as f64 * j as f64),
-            };
+            } / (n as f64).sqrt();
         }
     }
 
