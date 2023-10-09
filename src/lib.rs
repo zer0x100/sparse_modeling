@@ -1,13 +1,13 @@
 mod data_convert;
 mod gen_signal;
-mod lasso;
+mod sparse_alg;
 mod math_func;
 mod mk_matrix;
 
 mod prelude {
     pub use crate::data_convert::*;
     pub use crate::gen_signal::*;
-    pub use crate::lasso::*;
+    pub use crate::sparse_alg::*;
     pub use crate::math_func::*;
     pub use crate::mk_matrix::*;
     pub use anyhow::{anyhow, Result};

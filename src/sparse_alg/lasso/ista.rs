@@ -1,4 +1,4 @@
-use super::Lasso;
+use super::super::SparseAlg;
 use crate::prelude::*;
 
 pub struct LassoIsta {
@@ -22,7 +22,7 @@ impl LassoIsta {
     }
 }
 
-impl Lasso for LassoIsta {
+impl SparseAlg for LassoIsta {
     fn solve(&self, mat: &Array2<f64>, y: &Array1<f64>) -> Result<Array1<f64>> {
         //check data
         if mat.shape()[0] != y.shape()[0] {
