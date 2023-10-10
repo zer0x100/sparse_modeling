@@ -17,8 +17,8 @@ impl Omp {
 
 impl SparseAlg for Omp {
     fn solve(&self, mat: &Array2<f64>, y: &Array1<f64>) -> Result<Array1<f64>> {
-        if mat.shape()[1] != y.shape()[0] {
-            return Err(anyhow!("mat's column size is different from y's size"));
+        if mat.shape()[0] != y.shape()[0] {
+            return Err(anyhow!(format!("mat's row size is {} / y's size is {}", mat.shape()[0], y.shape()[0]).to_string()));
         }
         if mat.shape()[0] > mat.shape()[1] {
             return Err(anyhow!("mat's row size is more than column size"));
