@@ -20,6 +20,7 @@ mod prelude {
     pub use plotters::prelude::*;
     pub use std::cmp;
     pub use std::{f64::consts::PI, fs};
+    pub use std::collections::HashSet;
 }
 
 use crate::prelude::*;

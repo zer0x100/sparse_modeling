@@ -68,3 +68,16 @@ pub fn normalize_columns(mat: &mut Array2<f64>) {
         }
     }
 }
+
+pub fn lsm_with_support(mat: &Array2<f64>, y: &Array1<f64>, support: &HashSet<usize>) -> Result<Array1<f64>> {
+    if mat.shape()[0] != y.shape()[0] {
+        return Err(anyhow!("mat's column size and y's size are different"));
+    }
+    
+
+
+    let mut x = Array::zeros(mat.shape()[1]);
+
+
+    Ok(x)
+}
