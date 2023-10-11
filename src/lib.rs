@@ -1,38 +1,36 @@
 mod data_convert;
 mod gen_signal;
-mod sparse_alg;
 mod math_func;
 mod mk_matrix;
+mod sparse_alg;
 
 mod prelude {
     pub use crate::data_convert::*;
     pub use crate::gen_signal::*;
-    pub use crate::sparse_alg::*;
     pub use crate::math_func::*;
     pub use crate::mk_matrix::*;
+    pub use crate::sparse_alg::*;
     pub use anyhow::{anyhow, Result};
     pub use ndarray::prelude::*;
     pub use ndarray_linalg::{c64, generate, svd::SVD, Inverse, Norm, Scalar};
+    pub use plotters::prelude::*;
     pub use rand::{
         distributions::{Distribution, Uniform},
         Rng,
     };
-    pub use plotters::prelude::*;
     pub use std::cmp;
-    pub use std::{f64::consts::PI, fs};
     pub use std::collections::HashSet;
+    pub use std::{f64::consts::PI, fs};
 }
-
-use crate::prelude::*;
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+
     use crate::prelude::*;
 
     #[test]
     fn lasso_test() {
-        let input_data: Array1<f64> = rand_sparse_signal(100, 15, 1.5);
+        let input_data: Array1<f64> = rand_sparse_signal(100, 12, 1.5);
         let matrix: Array2<f64> =
             generate::random((input_data.shape()[0] / 2, input_data.shape()[0]));
         let output_data = matrix.dot(&input_data);
@@ -102,8 +100,15 @@ mod tests {
         let output_data = matrix.dot(&input_data);
 
         let threshold = 0.01;
+        let iter_num = 100;
+        let wmp = Wmp::new(threshold, iter_num, 0.5).unwrap();
+        let wmp_result = wmp.solve(&matrix, &output_data).unwrap();
+        let mp = Mp::new(threshold, iter_num);
+        let mp_result = mp.solve(&matrix, &output_data).unwrap();
         let omp = Omp::new(threshold);
         let omp_result = omp.solve(&matrix, &output_data).unwrap();
+        let threshold_alg = ThresholdAlg::new(15);
+        let threshold_result = threshold_alg.solve(&matrix, &output_data).unwrap();
 
         //Draw ista_result, fista_result, and input_data
         //描画先をBackendとして指定。ここでは画像に出力するためBitMapBackend
@@ -130,17 +135,36 @@ mod tests {
         //データの描画。(x, y)のイテレータとしてデータ点を渡す。
         let point_series = PointSeries::<_, _, Circle<_, _>, _>::new(
             input_data.iter().enumerate().map(|(i, x)| (i, *x)),
-            2,
+            4,
             &RED,
         );
         chart.draw_series(point_series).unwrap();
-        
         let point_series = PointSeries::<_, _, Circle<_, _>, _>::new(
-            omp_result.iter().enumerate().map(|(i, x)| (i, *x)),
-            2,
+            mp_result.iter().enumerate().map(|(i, x)| (i, *x)),
+            3,
             &BLUE,
         );
         chart.draw_series(point_series).unwrap();
+        let point_series = PointSeries::<_, _, Circle<_, _>, _>::new(
+            omp_result.iter().enumerate().map(|(i, x)| (i, *x)),
+            2,
+            &GREEN,
+        );
+        chart.draw_series(point_series).unwrap();
+        let point_series = PointSeries::<_, _, Circle<_, _>, _>::new(
+            wmp_result.iter().enumerate().map(|(i, x)| (i, *x)),
+            2,
+            &BLACK,
+        );
+        chart.draw_series(point_series).unwrap();
+        let point_series = PointSeries::<_, _, Circle<_, _>, _>::new(
+            threshold_result.iter().enumerate().map(|(i, x)| (i, *x)),
+            7,
+            &YELLOW,
+        );
+        chart.draw_series(point_series).unwrap();
+
+
     }
 
     #[test]
@@ -156,19 +180,10 @@ mod tests {
         let arr3 = array![4., 5.];
         assert_eq!(
             columns_to_2darray(2, [arr, arr2, arr3].into_iter()).unwrap(),
-            array![
-                [0., 2., 4.],
-                [1., 3., 5.],
-            ]
+            array![[0., 2., 4.], [1., 3., 5.],]
         );
 
-        let a = array![
-            [1., 3.],
-            [1., 2.]
-        ];
-        assert_eq!(
-            pseudo_inverse(&a),
-            a.inv().unwrap(),
-        );
+        let a = array![[1., 3.], [1., 2.]];
+        assert_eq!(pseudo_inverse(&a).unwrap(), a.inv().unwrap(),);
     }
 }

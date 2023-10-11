@@ -25,11 +25,14 @@ impl LassoIstaLipshitzSearch {
 impl SparseAlg for LassoIstaLipshitzSearch {
     fn solve(&self, mat: &Array2<f64>, y: &Array1<f64>) -> Result<Array1<f64>> {
         //check data
-        if mat.shape()[0] != y.shape()[0] {
-            return Err(anyhow!("mat's row size and y's size are different."));
-        }
-        if mat.shape()[0] > mat.shape()[1] {
-            return Err(anyhow!("mat's row size is bigger than its column size."));
+        if mat.shape()[0] != y.shape()[0] || mat.shape()[0] > mat.shape()[1] {
+            return Err(anyhow!(format!(
+                "mat's shape is {}x{} / y's size is {}",
+                mat.shape()[0],
+                mat.shape()[1],
+                y.shape()[0]
+            )
+            .to_string()));
         }
 
         //initialization

@@ -1,4 +1,3 @@
-
 use crate::prelude::*;
 
 //Wn_{i, j} = exp(-2*pi/n*i*j)

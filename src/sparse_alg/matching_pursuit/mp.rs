@@ -1,21 +1,26 @@
 use super::super::SparseAlg;
 use crate::prelude::*;
 
-pub struct Omp {
+pub struct Mp {
     threshold: f64,
+    iter_num: usize,
 }
 
-impl Omp {
-    pub fn new(threshold: f64) -> Self {
-        Self { threshold }
+impl Mp {
+    pub fn new(threshold: f64, iter_num: usize) -> Self {
+        Self {
+            threshold,
+            iter_num,
+        }
     }
 
-    pub fn set(&mut self, threshold: f64) {
+    pub fn set(&mut self, threshold: f64, iter_num: usize) {
         self.threshold = threshold;
+        self.iter_num = iter_num;
     }
 }
 
-impl SparseAlg for Omp {
+impl SparseAlg for Mp {
     fn solve(&self, mat: &Array2<f64>, y: &Array1<f64>) -> Result<Array1<f64>> {
         if mat.shape()[0] != y.shape()[0] || mat.shape()[0] > mat.shape()[1] {
             return Err(anyhow!(format!(
@@ -32,7 +37,7 @@ impl SparseAlg for Omp {
         let mut r = y.clone();
         let mut support = HashSet::new();
 
-        for _ in 0..mat.shape()[1] {
+        for _ in 0..self.iter_num {
             //rの射影が最大となる列探索
             let mut max_j = 0;
             let mut max_proj = 0.;
@@ -48,7 +53,8 @@ impl SparseAlg for Omp {
             support.insert(max_j);
 
             //update tentative solution(x)
-            x = lsm_with_support(mat, y, &support).expect("Can't solve lsm");
+            let target_column = mat.slice(s![.., max_j]);
+            x[max_j] += target_column.t().dot(&r) / target_column.norm_l2().powf(2.0);
 
             //update residual(r)
             r = y - mat.dot(&x);
