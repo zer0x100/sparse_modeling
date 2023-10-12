@@ -26,6 +26,7 @@ pub fn matrix_l2(mat: &Array2<f64>) -> f64 {
     s.norm_max()
 }
 
+#[allow(dead_code)]
 pub fn mutal_coherence(mat: &Array2<f64>) -> f64 {
     let mut mat_sub = mat.clone();
     mat_sub = normalize_columns(&mat_sub).expect("can't normalize columns");
@@ -36,6 +37,7 @@ pub fn mutal_coherence(mat: &Array2<f64>) -> f64 {
     gram.norm_max()
 }
 
+#[allow(dead_code)]
 pub fn babel_func(mat: &Array2<f64>, p: usize) -> Result<f64> {
     if mat.shape()[1] <= p {
         return Err(anyhow!("p is more than mat's column size"));
@@ -60,15 +62,16 @@ pub fn babel_func(mat: &Array2<f64>, p: usize) -> Result<f64> {
     Ok(max)
 }
 
+#[allow(dead_code)]
 pub fn normalize_columns(mat: &Array2<f64>) -> Result<Array2<f64>> {
     let mut result_mat = mat.clone();
     for i in 0..result_mat.shape()[1] {
-        let columns = result_mat.slice_mut(s![..;1, i]);
-        let l2_norm = columns.norm_l2();
+        let column = result_mat.slice_mut(s![..;1, i]);
+        let l2_norm = column.norm_l2();
         if l2_norm == 0.0 {
             return Err(anyhow!("0 column exits"));
         }
-        for x in columns {
+        for x in column {
             *x = *x / l2_norm;
         }
     }
@@ -144,6 +147,7 @@ pub fn pseudo_inverse(mat: &Array2<f64>) -> Result<Array2<f64>> {
     Ok(vt.t().dot(&sv_inverse.dot(&u.t())))
 }
 
+#[allow(dead_code)]
 pub fn support_distance(vec1: &Array1<f64>, vec2: &Array1<f64>) -> Result<f64> {
     if vec1.len() != vec2.len() {
         return Err(anyhow!(format!("two vector sizes are different. vec1.len(): {}/ vec2.len(): {}", vec1.len(), vec2.len()).to_string()));
@@ -155,12 +159,13 @@ pub fn support_distance(vec1: &Array1<f64>, vec2: &Array1<f64>) -> Result<f64> {
         .filter(|i| supp2.contains(*i))
         .map(|i| *i)
         .collect();
-    if cmp::max(supp1.len(), supp2.len()) == 0 {
+    if supp1.len() == 0 && supp2.len() == 0 {
         return Ok(0.0);
     }
     Ok(1. - supp1_and_supp2.len() as f64 / cmp::max(supp1.len(), supp2.len()) as f64)
 }
 
+#[allow(dead_code)]
 pub fn support(vec: &Array1<f64>) -> HashSet<usize> {
     let mut supp = HashSet::new();
     vec.iter()
@@ -174,6 +179,7 @@ pub fn support(vec: &Array1<f64>) -> HashSet<usize> {
     supp
 }
 
+#[allow(dead_code)]
 pub fn l2_relative_err(exact_x: &Array1<f64>, estimated_x: &Array1<f64>) -> Result<f64> {
     if exact_x.len() != estimated_x.len() {
         return Err(anyhow!(format!("exact_x's size is {} / estimated_x's is {}", exact_x.len(), estimated_x.len()).to_string()));

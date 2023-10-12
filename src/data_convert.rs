@@ -3,6 +3,7 @@ use csv;
 
 //データ変換関連
 //csvデータを1次元配列に
+#[allow(dead_code)]
 pub fn csv_to_vec(file: fs::File) -> Vec<f64> {
     let mut reader = csv::Reader::from_reader(file);
     let mut arr: Vec<f64> = Vec::new();

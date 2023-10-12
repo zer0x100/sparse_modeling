@@ -8,6 +8,7 @@ pub struct Wmp {
 }
 
 impl Wmp {
+    #[allow(dead_code)]
     pub fn new(threshold: f64, iter_num: usize, proj_ratio: f64) -> Result<Self> {
         if proj_ratio >= 1.0 || proj_ratio <= 0.0 {
             return Err(anyhow!(format!(
@@ -23,6 +24,7 @@ impl Wmp {
         })
     }
 
+    #[allow(dead_code)]
     pub fn set(&mut self, threshold: f64, iter_num: usize, proj_ratio: f64) -> Result<()> {
         if proj_ratio >= 1.0 || proj_ratio <= 0.0 {
             return Err(anyhow!(""));
@@ -52,7 +54,7 @@ impl SparseAlg for Wmp {
         let mut support = HashSet::new();
 
         for _ in 0..self.iter_num {
-            //rの射影が最大となる列探索
+            //rの射影が最初に閾値を超える列を探す
             let mut target_j = 0;
             for j in 0..mat.shape()[1] {
                 let column_j = mat.slice(s![.., j]);
@@ -60,6 +62,9 @@ impl SparseAlg for Wmp {
                 if proj >= self.proj_ratio * r.norm_l2() {
                     target_j = j;
                     break;
+                }
+                if j == mat.shape()[1] -1 {
+                    return Ok(x);
                 }
             }
             //support update

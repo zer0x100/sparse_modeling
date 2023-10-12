@@ -6,9 +6,11 @@ pub struct ThresholdAlg {
 }
 
 impl ThresholdAlg {
+    #[allow(dead_code)]
     pub fn new(support_size: usize) -> Self {
         Self { support_size }
     }
+    #[allow(dead_code)]
     pub fn set(&mut self, support_size: usize) {
         self.support_size = support_size;
     }

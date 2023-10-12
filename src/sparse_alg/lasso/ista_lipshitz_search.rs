@@ -8,6 +8,7 @@ pub struct LassoIstaLipshitzSearch {
 }
 
 impl LassoIstaLipshitzSearch {
+    #[allow(dead_code)]
     pub fn new(lambda: f64, iter_num: usize, threshold: f64) -> Self {
         Self {
             lambda,
@@ -15,6 +16,7 @@ impl LassoIstaLipshitzSearch {
             threshold,
         }
     }
+    #[allow(dead_code)]
     pub fn set(&mut self, lambda: f64, iter_num: usize, threshold: f64) {
         self.lambda = lambda;
         self.iter_num = iter_num;

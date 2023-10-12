@@ -6,10 +6,11 @@ pub struct Omp {
 }
 
 impl Omp {
+    #[allow(dead_code)]
     pub fn new(threshold: f64) -> Self {
         Self { threshold }
     }
-
+    #[allow(dead_code)]
     pub fn set(&mut self, threshold: f64) {
         self.threshold = threshold;
     }

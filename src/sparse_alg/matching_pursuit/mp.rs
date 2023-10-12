@@ -7,13 +7,14 @@ pub struct Mp {
 }
 
 impl Mp {
+    #[allow(dead_code)]
     pub fn new(threshold: f64, iter_num: usize) -> Self {
         Self {
             threshold,
             iter_num,
         }
     }
-
+    #[allow(dead_code)]
     pub fn set(&mut self, threshold: f64, iter_num: usize) {
         self.threshold = threshold;
         self.iter_num = iter_num;

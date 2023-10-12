@@ -257,7 +257,7 @@ mod tests {
 
         //グラフの軸設定など
         let mut chart = ChartBuilder::on(&root)
-            .caption("mp_test/x: pulse num/y: support distance", ("sans-serif", 50).into_font())
+            .caption("mp_test/x: pulse num/y: support distance", ("sans-serif", 20).into_font())
             .margin(10) //上下左右の余白
             .x_label_area_size(30) //x軸ラベル部分の余白
             .y_label_area_size(30) //y軸ラベル部分の余白
@@ -304,7 +304,7 @@ mod tests {
 
         //グラフの軸設定など
         let mut chart = ChartBuilder::on(&root)
-            .caption("mp_test/x: pulse num/y: support distance", ("sans-serif", 50).into_font())
+            .caption("mp_test/x: pulse num/y: support distance", ("sans-serif", 20).into_font())
             .margin(10) //上下左右の余白
             .x_label_area_size(30) //x軸ラベル部分の余白
             .y_label_area_size(30) //y軸ラベル部分の余白
@@ -360,11 +360,23 @@ mod tests {
             array![[0., 2., 4.], [1., 3., 5.],]
         );
 
+        let arr = array![
+            [1., 2., 3.],
+            [2., 5., 7.],
+        ];
+        let arr = normalize_columns(&arr).unwrap();
+        assert_eq!(arr, array![
+            [1. / 5.0f64.powf(0.5), 2. / 29.0f64.powf(0.5), 3. / 58.0f64.powf(0.5)],
+            [2. / 5.0f64.powf(0.5), 5. / 29.0f64.powf(0.5), 7. / 58.0f64.powf(0.5)],
+        ]);
+
         let a = array![[1., 3.], [1., 2.]];
-        assert!((pseudo_inverse(&a).unwrap() - a.inv().unwrap()).norm_l2() < 0.01);
+        assert!((pseudo_inverse(&a).unwrap() - a.inv().unwrap()).norm_l2() < F64_ERR_RANGE);
 
         let a = array![1., 2., 0., 5., 0.];
         let supp = support(&a);
         assert!(supp.contains(&0) && supp.contains(&1) && !supp.contains(&2) && supp.contains(&3) && !supp.contains(&4));
+        let b = array![0., 3., 0., 4., 2.];
+        assert!((support_distance(&a, &b).unwrap() - 0.33333333333333).abs() < F64_ERR_RANGE);
     }
 }
