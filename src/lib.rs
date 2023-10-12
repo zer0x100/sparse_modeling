@@ -21,6 +21,7 @@ mod prelude {
     pub use std::cmp;
     pub use std::collections::HashSet;
     pub use std::{f64::consts::PI, fs};
+    pub const F64_ERR_RANGE: f64 = 1e-8;
 }
 
 #[cfg(test)]
@@ -30,7 +31,7 @@ mod tests {
 
     #[test]
     fn lasso_test() {
-        let input_data: Array1<f64> = rand_sparse_signal(100, 12, 1.5);
+        let input_data: Array1<f64> = rand_pulses_signal(100, 12, 1.0, 2.0).expect("can't generate a signal");
         let matrix: Array2<f64> =
             generate::random((input_data.shape()[0] / 2, input_data.shape()[0]));
         let output_data = matrix.dot(&input_data);
@@ -91,10 +92,10 @@ mod tests {
     }
 
     #[test]
-    fn mp_test() {
+    fn mp_1sample_test() {
         std::env::set_var("RUST_BACKTRACE", "1");
 
-        let input_data: Array1<f64> = rand_sparse_signal(100, 15, 1.5);
+        let input_data: Array1<f64> = rand_pulses_signal(100, 15, 1.0, 2.0).expect("can't generate signal");
         let matrix: Array2<f64> =
             generate::random((input_data.shape()[0] / 2, input_data.shape()[0]));
         let output_data = matrix.dot(&input_data);
@@ -168,6 +169,75 @@ mod tests {
     }
 
     #[test]
+    fn mp_test() {
+        //set parameters
+        let threshold = 1e-4;
+        let sample_size = 1000;
+        let iter_num = 10000;
+        let matrix_shape = (30, 50);
+        let supp_sizes_range = 1..11;
+
+        //ThresholdAlg, Wmp, Mp, Ompの順で結果を格納
+        let mut supp_dist = Vec::<(usize, [f64; 4])>::new();
+        let mut l2_err = Vec::<(usize, [f64; 4])>::new();
+
+
+        for support_size in supp_sizes_range {
+            for _ in 0..sample_size {
+                let matrix: Array2<f64> = ndarray_linalg::random(matrix_shape);
+                let matrix = normalize_columns(&matrix).expect("can't normalize matrix");
+                let input_signal = rand_pulses_signal(matrix_shape.1, support_size, 1.0, 2.0)
+                    .expect("failed to generate a signal");
+                let output_signal = matrix.dot(&input_signal);
+    
+                let threshold_alg = ThresholdAlg::new(support_size);
+                let threshold_alg_result = threshold_alg.solve(&matrix, &output_signal)
+                    .expect("ThresholdAlg failed");
+                let wmp = Wmp::new(threshold, iter_num, 0.5)
+                    .expect("failed to create wmp(weak matching pursuit)");
+                let wmp_result = wmp.solve(&matrix, &output_signal)
+                    .expect("wmp failed");
+                let mp = Mp::new(threshold, iter_num);
+                let mp_result = mp.solve(&matrix, &output_signal)
+                    .expect("mp(matching pursuit) failed");
+                let omp = Omp::new(threshold);
+                let omp_result = omp.solve(&matrix, &output_signal)
+                    .expect("omp(orthogonal matching pursuit) failed");
+
+                supp_dist.push(
+                    (
+                        support_size,
+                        [
+                            support_distance(&output_signal, &threshold_alg_result).expect("failed to compute support distace"),
+                            support_distance(&output_signal, &wmp_result).expect("failed to compute support distace"),
+                            support_distance(&output_signal, &mp_result).expect("failed to compute support distace"),
+                            support_distance(&output_signal, &omp_result).expect("failed to compute support distace"),
+                        ],
+                    )
+                );
+
+                l2_err.push(
+                    (
+                        support_size,
+                        [
+                            l2_relative_err(&output_signal, &threshold_alg_result).expect("can't calucalate l2 error"),
+                            l2_relative_err(&output_signal, &wmp_result).expect("can't calucalate l2 error"),
+                            l2_relative_err(&output_signal, &mp_result).expect("can't calucalate l2 error"),
+                            l2_relative_err(&output_signal, &omp_result).expect("can't calucalate l2 error"),
+                        ],
+                    )
+                );
+            }
+        }
+        supp_dist.iter_mut().for_each(|(_, distaces)| {
+            distaces.iter_mut().for_each(|dist| {
+                *dist = *dist / sample_size as f64;
+            })
+        })
+
+    }
+
+    #[test]
     fn math_func_test() {
         std::env::set_var("RUST_BACKTRACE", "1");
 
@@ -184,6 +254,10 @@ mod tests {
         );
 
         let a = array![[1., 3.], [1., 2.]];
-        assert_eq!(pseudo_inverse(&a).unwrap(), a.inv().unwrap(),);
+        assert!((pseudo_inverse(&a).unwrap() - a.inv().unwrap()).norm_l2() < 0.01);
+
+        let a = array![1., 2., 0., 5., 0.];
+        let supp = support(&a);
+        assert!(supp.contains(&0) && supp.contains(&1) && !supp.contains(&2) && supp.contains(&3) && !supp.contains(&4));
     }
 }

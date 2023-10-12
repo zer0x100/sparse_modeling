@@ -143,3 +143,51 @@ pub fn pseudo_inverse(mat: &Array2<f64>) -> Result<Array2<f64>> {
     }
     Ok(vt.t().dot(&sv_inverse.dot(&u.t())))
 }
+
+pub fn support_distance(vec1: &Array1<f64>, vec2: &Array1<f64>) -> Result<f64> {
+    if vec1.len() != vec2.len() {
+        return Err(anyhow!(format!("two vector sizes are different. vec1.len(): {}/ vec2.len(): {}", vec1.len(), vec2.len()).to_string()));
+    }
+    let supp1 = support(&vec1);
+    let supp2 = support(&vec2);
+    let supp1_and_supp2: HashSet<usize> = supp1
+        .iter()
+        .filter(|i| supp2.contains(*i))
+        .map(|i| *i)
+        .collect();
+    if cmp::max(supp1.len(), supp2.len()) == 0 {
+        return Ok(0.0);
+    }
+    Ok(1. - supp1_and_supp2.len() as f64 / cmp::max(supp1.len(), supp2.len()) as f64)
+}
+
+pub fn support(vec: &Array1<f64>) -> HashSet<usize> {
+    let mut supp = HashSet::new();
+    vec.iter()
+        .enumerate()
+        .for_each(|(i, v)| {
+            if v.abs() > F64_ERR_RANGE {
+                supp.insert(i);
+            }
+        }
+    );
+    supp
+}
+
+pub fn l2_relative_err(exact_x: &Array1<f64>, estimated_x: &Array1<f64>) -> Result<f64> {
+    if exact_x.len() != estimated_x.len() {
+        return Err(anyhow!(format!("exact_x's size is {} / estimated_x's is {}", exact_x.len(), estimated_x.len()).to_string()));
+    }
+
+    let exact_x_norm = exact_x.norm_l2();
+    let diff_norm = (exact_x - estimated_x).norm_l2();
+    if exact_x_norm == 0.0 {
+        if diff_norm == 0.0 {
+            return Ok(0.0);
+        }
+        else {
+            return Ok(std::f64::MAX);
+        }
+    }
+    Ok(diff_norm / exact_x_norm)
+}
