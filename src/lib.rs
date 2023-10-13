@@ -35,8 +35,7 @@ mod tests {
         let mut rng = rand::thread_rng();
         let input_data: Array1<f64> =
             rand_pulses_signal(&mut rng, 100, 12, 1.0, 2.0).expect("can't generate a signal");
-        let matrix: Array2<f64> =
-            generate::random((input_data.shape()[0] / 2, input_data.shape()[0]));
+        let matrix: Array2<f64> = ArrayBase::from_shape_fn((50,100), |_| rng.gen_range(-1.0..1.0));
         let output_data = matrix.dot(&input_data);
 
         let lambda = 1.;
@@ -101,7 +100,7 @@ mod tests {
         let mut rng = rand::thread_rng();
         let input_data: Array1<f64> =
             rand_pulses_signal(&mut rng, 50, 5, 1.0, 2.0).expect("can't generate signal");
-        let matrix: Array2<f64> = generate::random((30, 50));
+        let matrix: Array2<f64> = ArrayBase::from_shape_fn((30, 50), |_| rng.gen_range(-1.0..1.0));
         let matrix = normalize_columns(&matrix).unwrap();
         let output_data = matrix.dot(&input_data);
 
@@ -125,10 +124,10 @@ mod tests {
         );
         println!(
             "l2_relative_err|| threshold: {}, wmp: {}, mp: {}, omp: {}",
-            l2_relative_err(&input_data, &threshold_result).unwrap(),
-            l2_relative_err(&input_data, &wmp_result).unwrap(),
-            l2_relative_err(&input_data, &mp_result).unwrap(),
-            l2_relative_err(&input_data, &omp_result).unwrap(),
+            l2_relative_err(&input_data, &threshold_result).unwrap().powf(2.0),
+            l2_relative_err(&input_data, &wmp_result).unwrap().powf(2.0),
+            l2_relative_err(&input_data, &mp_result).unwrap().powf(2.0),
+            l2_relative_err(&input_data, &omp_result).unwrap().powf(2.0),
         );
 
         //Draw ista_result, fista_result, and input_data
@@ -219,7 +218,7 @@ mod tests {
                 if it % 100 == 0 {
                     println!("support size {}/sample num {}", support_size, it);
                 }
-                let matrix: Array2<f64> = ndarray_linalg::random_using(matrix_shape, &mut rng);
+                let matrix: Array2<f64> = ArrayBase::from_shape_fn(matrix_shape, |_| rng.gen_range(-1.0..1.0));
                 let matrix = normalize_columns(&matrix).expect("can't normalize matrix");
                 let input_signal = rand_pulses_signal(
                     &mut rng,
@@ -253,27 +252,26 @@ mod tests {
                     .expect("failed to compute support distace");
 
                 l2_err.1[0] += l2_relative_err(&input_signal, &threshold_alg_result)
-                    .expect("can't calucalate l2 error");
+                    .expect("can't calucalate l2 error").powf(2.0);
                 l2_err.1[1] +=
-                    l2_relative_err(&input_signal, &wmp_result).expect("can't calucalate l2 error");
+                    l2_relative_err(&input_signal, &wmp_result)
+                    .expect("can't calucalate l2 error").powf(2.0);
                 l2_err.1[2] +=
-                    l2_relative_err(&input_signal, &mp_result).expect("can't calucalate l2 error");
+                    l2_relative_err(&input_signal, &mp_result)
+                    .expect("can't calucalate l2 error").powf(2.0);
                 l2_err.1[3] +=
-                    l2_relative_err(&input_signal, &omp_result).expect("can't calucalate l2 error");
+                    l2_relative_err(&input_signal, &omp_result)
+                    .expect("can't calucalate l2 error").powf(2.0);
             }
+            supp_dist.1.iter_mut().for_each(|dist| {
+                *dist = *dist / sample_size as f64;
+            });
+            l2_err.1.iter_mut().for_each(|dist| {
+                *dist = *dist / sample_size as f64;
+            });
             supp_dist_list.push(supp_dist);
             l2_err_list.push(l2_err);
         }
-        supp_dist_list.iter_mut().for_each(|(_, distaces)| {
-            distaces.iter_mut().for_each(|dist| {
-                *dist = *dist / sample_size as f64;
-            })
-        });
-        l2_err_list.iter_mut().for_each(|(_, distaces)| {
-            distaces.iter_mut().for_each(|dist| {
-                *dist = *dist / sample_size as f64;
-            })
-        });
         println!("finished calucalating mps");
 
         //Plot

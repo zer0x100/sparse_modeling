@@ -36,7 +36,7 @@ impl SparseAlg for Omp {
 
         for _ in 0..mat.shape()[1] {
             //rの射影が最大となる列探索
-            let (target_col, _) = mat_normalized.t().dot(&r)
+            let (target_idx, _) = mat_normalized.t().dot(&r)
                 .iter()
                 .map(|v| v.abs())
                 .enumerate()
@@ -45,7 +45,7 @@ impl SparseAlg for Omp {
                 .expect("failed to get max projection");
 
             //support update
-            support.insert(target_col);
+            support.insert(target_idx);
 
             //update tentative solution(x)
             x = lsm_with_support(mat, y, &support).expect("Can't solve lsm");

@@ -41,7 +41,7 @@ impl SparseAlg for Mp {
 
         for _ in 0..self.iter_num {
             //rの射影が最大となる列探索
-            let (target_col, _) = mat_normalized.t().dot(&r)
+            let (target_idx, _) = mat_normalized.t().dot(&r)
                 .iter()
                 .map(|v| v.abs())
                 .enumerate()
@@ -49,14 +49,15 @@ impl SparseAlg for Mp {
                 .expect("failed to get max projection");
             
             //support update
-            support.insert(target_col);
+            support.insert(target_idx);
 
             //update tentative solution(x)
-            let target_column = mat.slice(s![.., target_col]);
-            x[target_col] += target_column.t().dot(&r) / target_column.norm_l2().powf(2.0);
+            let target_col = mat.slice(s![.., target_idx]).to_owned();
+            let temp = target_col.t().dot(&r) / target_col.norm_l2().powf(2.0);
+            x[target_idx] += temp;
 
             //update residual(r)
-            r = y - mat.dot(&x);
+            r = r - temp * target_col;
 
             if r.norm_l2() < self.threshold {
                 break;
