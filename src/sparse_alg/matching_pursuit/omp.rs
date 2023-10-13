@@ -29,24 +29,23 @@ impl SparseAlg for Omp {
         }
 
         //initialization
+        let mat_normalized = normalize_columns(mat).unwrap();
         let mut x: Array1<f64> = Array::zeros(mat.shape()[1]);
         let mut r = y.clone();
         let mut support = HashSet::new();
 
         for _ in 0..mat.shape()[1] {
             //rの射影が最大となる列探索
-            let mut max_j = 0;
-            let mut max_proj = 0.;
-            for j in 0..mat.shape()[1] {
-                let column_j = mat.slice(s![.., j]);
-                let proj = (column_j.t().dot(&r) / column_j.norm_l2()).abs();
-                if max_proj <= proj {
-                    max_j = j;
-                    max_proj = proj;
-                }
-            }
+            let (target_col, _) = mat_normalized.t().dot(&r)
+                .iter()
+                .map(|v| v.abs())
+                .enumerate()
+                .filter(|(i, _)| !support.contains(i))
+                .max_by(|a, b| a.1.partial_cmp(&b.1).unwrap())
+                .expect("failed to get max projection");
+
             //support update
-            support.insert(max_j);
+            support.insert(target_col);
 
             //update tentative solution(x)
             x = lsm_with_support(mat, y, &support).expect("Can't solve lsm");

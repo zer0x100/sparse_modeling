@@ -1,4 +1,3 @@
-
 use crate::prelude::*;
 
 //soft theresholding function
@@ -88,7 +87,7 @@ pub fn lsm_with_support(
         return Err(anyhow!("mat's row size and y's size are different"));
     }
     if support.is_empty() {
-        return  Err(anyhow!("support is empty."));
+        return Err(anyhow!("support is empty."));
     }
 
     let mat_sub = columns_to_2darray(
@@ -102,7 +101,9 @@ pub fn lsm_with_support(
     .unwrap();
 
     let mut x = Array::zeros(mat.shape()[1]);
-    let x_sub = pseudo_inverse(&mat_sub).expect("can't compute pseudo inverse").dot(y);
+    let x_sub = pseudo_inverse(&mat_sub)
+        .expect("can't compute pseudo inverse")
+        .dot(y);
     support.iter().enumerate().for_each(|(sub_i, x_i)| {
         x[*x_i] = x_sub[sub_i];
     });
@@ -135,7 +136,6 @@ pub fn pseudo_inverse(mat: &Array2<f64>) -> Result<Array2<f64>> {
     let u = u.unwrap();
     let vt = vt.unwrap();
 
-
     let mut sv_inverse = Array::zeros((mat.shape()[1], mat.shape()[0]));
 
     let sv_size = cmp::min(mat.shape()[0], mat.shape()[1]);
@@ -150,7 +150,12 @@ pub fn pseudo_inverse(mat: &Array2<f64>) -> Result<Array2<f64>> {
 #[allow(dead_code)]
 pub fn support_distance(vec1: &Array1<f64>, vec2: &Array1<f64>) -> Result<f64> {
     if vec1.len() != vec2.len() {
-        return Err(anyhow!(format!("two vector sizes are different. vec1.len(): {}/ vec2.len(): {}", vec1.len(), vec2.len()).to_string()));
+        return Err(anyhow!(format!(
+            "two vector sizes are different. vec1.len(): {}/ vec2.len(): {}",
+            vec1.len(),
+            vec2.len()
+        )
+        .to_string()));
     }
     let supp1 = support(&vec1);
     let supp2 = support(&vec2);
@@ -168,21 +173,23 @@ pub fn support_distance(vec1: &Array1<f64>, vec2: &Array1<f64>) -> Result<f64> {
 #[allow(dead_code)]
 pub fn support(vec: &Array1<f64>) -> HashSet<usize> {
     let mut supp = HashSet::new();
-    vec.iter()
-        .enumerate()
-        .for_each(|(i, v)| {
-            if v.abs() > F64_ERR_RANGE {
-                supp.insert(i);
-            }
+    vec.iter().enumerate().for_each(|(i, v)| {
+        if v.abs() > F64_ERR_RANGE {
+            supp.insert(i);
         }
-    );
+    });
     supp
 }
 
 #[allow(dead_code)]
 pub fn l2_relative_err(exact_x: &Array1<f64>, estimated_x: &Array1<f64>) -> Result<f64> {
     if exact_x.len() != estimated_x.len() {
-        return Err(anyhow!(format!("exact_x's size is {} / estimated_x's is {}", exact_x.len(), estimated_x.len()).to_string()));
+        return Err(anyhow!(format!(
+            "exact_x's size is {} / estimated_x's is {}",
+            exact_x.len(),
+            estimated_x.len()
+        )
+        .to_string()));
     }
 
     let exact_x_norm = exact_x.norm_l2();
@@ -190,8 +197,7 @@ pub fn l2_relative_err(exact_x: &Array1<f64>, estimated_x: &Array1<f64>) -> Resu
     if exact_x_norm == 0.0 {
         if diff_norm == 0.0 {
             return Ok(0.0);
-        }
-        else {
+        } else {
             return Ok(std::f64::MAX);
         }
     }

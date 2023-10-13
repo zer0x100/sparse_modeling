@@ -29,7 +29,10 @@ impl SparseAlg for ThresholdAlg {
         }
 
         //matの列番号と、その列方向へのyの射影の絶対値をペアにして降順に並べる
-        let mut proj_list: Vec<(usize, f64)> = normalize_columns(mat).expect("can't normalize mat").t().dot(y)
+        let mut proj_list: Vec<(usize, f64)> = normalize_columns(mat)
+            .expect("can't normalize mat")
+            .t()
+            .dot(y)
             .iter()
             .map(|v| v.abs())
             .enumerate()

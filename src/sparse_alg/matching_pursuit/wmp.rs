@@ -56,17 +56,24 @@ impl SparseAlg for Wmp {
         for _ in 0..self.iter_num {
             //rの射影が最初に閾値を超える列を探す
             let mut target_j = 0;
+            let mut max_proj = 0.;
             for j in 0..mat.shape()[1] {
                 let column_j = mat.slice(s![.., j]);
                 let proj = (column_j.t().dot(&r) / column_j.norm_l2()).abs();
                 if proj >= self.proj_ratio * r.norm_l2() {
                     target_j = j;
+                    max_proj = proj;
                     break;
                 }
-                if j == mat.shape()[1] -1 {
-                    return Ok(x);
+                if max_proj < proj {
+                    target_j = j;
+                    max_proj = proj;
                 }
             }
+            if max_proj.abs() < F64_ERR_RANGE {
+                return Ok(x);
+            }
+
             //support update
             support.insert(target_j);
 

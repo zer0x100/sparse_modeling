@@ -34,28 +34,26 @@ impl SparseAlg for Mp {
         }
 
         //initialization
+        let mat_normalized = normalize_columns(mat).unwrap();
         let mut x: Array1<f64> = Array::zeros(mat.shape()[1]);
         let mut r = y.clone();
         let mut support = HashSet::new();
 
         for _ in 0..self.iter_num {
             //rの射影が最大となる列探索
-            let mut max_j = 0;
-            let mut max_proj = 0.;
-            for j in 0..mat.shape()[1] {
-                let column_j = mat.slice(s![.., j]);
-                let proj = (column_j.t().dot(&r) / column_j.norm_l2()).abs();
-                if max_proj <= proj {
-                    max_j = j;
-                    max_proj = proj;
-                }
-            }
+            let (target_col, _) = mat_normalized.t().dot(&r)
+                .iter()
+                .map(|v| v.abs())
+                .enumerate()
+                .max_by(|a, b| a.1.partial_cmp(&b.1).unwrap())
+                .expect("failed to get max projection");
+            
             //support update
-            support.insert(max_j);
+            support.insert(target_col);
 
             //update tentative solution(x)
-            let target_column = mat.slice(s![.., max_j]);
-            x[max_j] += target_column.t().dot(&r) / target_column.norm_l2().powf(2.0);
+            let target_column = mat.slice(s![.., target_col]);
+            x[target_col] += target_column.t().dot(&r) / target_column.norm_l2().powf(2.0);
 
             //update residual(r)
             r = y - mat.dot(&x);
