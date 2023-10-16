@@ -35,7 +35,7 @@ impl<T: L1Relaxzation> SparseAlg for T {
 
         //scaling
         scaling.for_each(|(i, scale)| {
-            solution[i] *= scale;
+            solution[i] /= scale;
         });
 
         Ok(solution)

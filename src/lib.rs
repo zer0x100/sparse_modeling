@@ -36,8 +36,8 @@ mod tests {
     fn lasso_test() {
         let mut rng = rand::thread_rng();
         let input_data: Array1<f64> =
-            rand_pulses_signal(&mut rng, 100, 12, 1.0, 2.0).expect("can't generate a signal");
-        let matrix: Array2<f64> = ArrayBase::from_shape_fn((50, 100), |_| rng.gen_range(-1.0..1.0));
+            rand_pulses_signal(&mut rng, 50, 5, 1.0, 2.0).expect("can't generate a signal");
+        let matrix: Array2<f64> = ArrayBase::from_shape_fn((30, 50), |_| rng.gen_range(-1.0..1.0));
         let output_data = matrix.dot(&input_data);
 
         let lambda = 1.;
@@ -397,11 +397,12 @@ mod tests {
         let matrix = ArrayBase::from_shape_fn((30, 50), |_| rng.gen_range(-1.0..1.0));
         let output_data = matrix.dot(&input_data);
 
-        let lasso_lambda = 1e-2;
+        let lasso_lambda = 1.;
         let iter_num = 1000;
-        let bs_threshold = 1e-2;
+        let bs_threshold = 1e-16;
         let sparse_alg_lasso = SparseAlgLasso::new(lasso_lambda, Box::new(LassoFista::new(iter_num, bs_threshold)));
         let result = sparse_alg_lasso.solve(&matrix, &output_data).unwrap();
+        let l1_result = sparse_alg_lasso.solve_l1(&matrix, &output_data).unwrap();
 
         //Draw ista_result, fista_result, and input_data
         //描画先をBackendとして指定。ここでは画像に出力するためBitMapBackend
@@ -434,6 +435,12 @@ mod tests {
         chart.draw_series(point_series).unwrap();
         let point_series = PointSeries::<_, _, Circle<_, _>, _>::new(
             result.iter().enumerate().map(|(i, x)| (i, *x)),
+            2,
+            &GREEN,
+        );
+        chart.draw_series(point_series).unwrap();
+        let point_series = PointSeries::<_, _, Circle<_, _>, _>::new(
+            l1_result.iter().enumerate().map(|(i, x)| (i, *x)),
             2,
             &BLUE,
         );
