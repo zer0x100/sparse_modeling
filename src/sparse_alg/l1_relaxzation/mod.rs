@@ -5,13 +5,13 @@ L0ノルムをLp(p = 0~1)など凸なものに緩和する。
 pub mod by_lasso;
 pub mod focuss;
 
-pub use crate::prelude::*;
+use crate::prelude::*;
 
 pub trait L1Relaxzation {
     fn solve_l1(&self, mat: &Array2<f64>, y: &Array1<f64>) -> Result<Array1<f64>>;
 }
 
-impl SparseAlg for dyn L1Relaxzation {
+impl<T: L1Relaxzation> SparseAlg for T {
     //L1緩和では、Aのノルムが大きい列に対応する要素が非ゼロになりやすいバイアスがあるため、
     //スケーリングしたものを解とする。
     fn solve(&self, mat: &Array2<f64>, y: &Array1<f64>) -> Result<Array1<f64>> {

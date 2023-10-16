@@ -7,9 +7,11 @@ pub struct SparseAlgLasso {
 }
 
 impl SparseAlgLasso {
+    #[allow(dead_code)]
     pub fn new(bs_lasso_lambda: f64, lasso_alg: Box<dyn LassoAlg>) -> Self {
         Self { bs_lasso_lambda, lasso_alg }
     }
+    #[allow(dead_code)]
     pub fn set(&mut self, bs_lasso_lambda: f64, lasso_alg: Box<dyn LassoAlg>) {
         self.bs_lasso_lambda = bs_lasso_lambda;
         self.lasso_alg = lasso_alg;
