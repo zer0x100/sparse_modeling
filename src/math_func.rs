@@ -203,3 +203,16 @@ pub fn l2_relative_err(exact_x: &Array1<f64>, estimated_x: &Array1<f64>) -> Resu
     }
     Ok(diff_norm / exact_x_norm)
 }
+
+pub fn is_underestimated_sys(mat: &Array2<f64>, y: &Array1<f64>) -> Result<()> {
+    if mat.shape()[0] != y.shape()[0] || mat.shape()[0] > mat.shape()[1] {
+        return Err(anyhow!(format!(
+            "mat's shape is {}x{} / y's size is {}",
+            mat.shape()[0],
+            mat.shape()[1],
+            y.shape()[0]
+        )
+        .to_string()));
+    }
+    Ok(())
+}

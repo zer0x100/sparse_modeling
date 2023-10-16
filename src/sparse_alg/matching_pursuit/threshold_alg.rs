@@ -18,14 +18,9 @@ impl ThresholdAlg {
 
 impl SparseAlg for ThresholdAlg {
     fn solve(&self, mat: &Array2<f64>, y: &Array1<f64>) -> Result<Array1<f64>> {
-        if mat.shape()[0] != y.shape()[0] || mat.shape()[0] > mat.shape()[1] {
-            return Err(anyhow!(format!(
-                "mat's shape is {}x{} / y's size is {}",
-                mat.shape()[0],
-                mat.shape()[1],
-                y.shape()[0]
-            )
-            .to_string()));
+        match is_underestimated_sys(mat, y) {
+            Err(msg) => return Err(msg),
+            Ok(_) => (),
         }
 
         //matの列番号と、その列方向へのyの射影の絶対値をペアにして降順に並べる

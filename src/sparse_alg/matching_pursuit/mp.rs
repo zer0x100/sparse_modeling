@@ -23,14 +23,9 @@ impl Mp {
 
 impl SparseAlg for Mp {
     fn solve(&self, mat: &Array2<f64>, y: &Array1<f64>) -> Result<Array1<f64>> {
-        if mat.shape()[0] != y.shape()[0] || mat.shape()[0] > mat.shape()[1] {
-            return Err(anyhow!(format!(
-                "mat's shape is {}x{} / y's size is {}",
-                mat.shape()[0],
-                mat.shape()[1],
-                y.shape()[0]
-            )
-            .to_string()));
+        match is_underestimated_sys(mat, y) {
+            Err(msg) => return Err(msg),
+            Ok(_) => (),
         }
 
         //initialization
@@ -41,13 +36,15 @@ impl SparseAlg for Mp {
 
         for _ in 0..self.iter_num {
             //rの射影が最大となる列探索
-            let (target_idx, _) = mat_normalized.t().dot(&r)
+            let (target_idx, _) = mat_normalized
+                .t()
+                .dot(&r)
                 .iter()
                 .map(|v| v.abs())
                 .enumerate()
                 .max_by(|a, b| a.1.partial_cmp(&b.1).unwrap())
                 .expect("failed to get max projection");
-            
+
             //support update
             support.insert(target_idx);
 

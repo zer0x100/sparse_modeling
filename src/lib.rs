@@ -1,5 +1,6 @@
 mod data_convert;
 mod gen_signal;
+mod lasso_alg;
 mod math_func;
 mod mk_matrix;
 mod sparse_alg;
@@ -7,6 +8,7 @@ mod sparse_alg;
 mod prelude {
     pub use crate::data_convert::*;
     pub use crate::gen_signal::*;
+    pub use crate::lasso_alg::*;
     pub use crate::math_func::*;
     pub use crate::mk_matrix::*;
     pub use crate::sparse_alg::*;
@@ -35,19 +37,19 @@ mod tests {
         let mut rng = rand::thread_rng();
         let input_data: Array1<f64> =
             rand_pulses_signal(&mut rng, 100, 12, 1.0, 2.0).expect("can't generate a signal");
-        let matrix: Array2<f64> = ArrayBase::from_shape_fn((50,100), |_| rng.gen_range(-1.0..1.0));
+        let matrix: Array2<f64> = ArrayBase::from_shape_fn((50, 100), |_| rng.gen_range(-1.0..1.0));
         let output_data = matrix.dot(&input_data);
 
         let lambda = 1.;
         let iter_num = 200;
         let threshold = 0.;
-        let lasso_ista = LassoIsta::new(lambda, iter_num, threshold);
+        let lasso_ista = LassoIsta::new(iter_num, threshold);
         let ista_result = lasso_ista
-            .solve(&matrix, &output_data)
+            .solve(&matrix, &output_data, lambda)
             .expect("can't solve lasso's ista");
-        let lasso_fista = LassoFista::new(lambda, iter_num, threshold);
+        let lasso_fista = LassoFista::new(iter_num, threshold);
         let fista_result = lasso_fista
-            .solve(&matrix, &output_data)
+            .solve(&matrix, &output_data, lambda)
             .expect("can't solve fista");
 
         //Draw ista_result, fista_result, and input_data
@@ -124,7 +126,9 @@ mod tests {
         );
         println!(
             "l2_relative_err|| threshold: {}, wmp: {}, mp: {}, omp: {}",
-            l2_relative_err(&input_data, &threshold_result).unwrap().powf(2.0),
+            l2_relative_err(&input_data, &threshold_result)
+                .unwrap()
+                .powf(2.0),
             l2_relative_err(&input_data, &wmp_result).unwrap().powf(2.0),
             l2_relative_err(&input_data, &mp_result).unwrap().powf(2.0),
             l2_relative_err(&input_data, &omp_result).unwrap().powf(2.0),
@@ -218,7 +222,8 @@ mod tests {
                 if it % 100 == 0 {
                     println!("support size {}/sample num {}", support_size, it);
                 }
-                let matrix: Array2<f64> = ArrayBase::from_shape_fn(matrix_shape, |_| rng.gen_range(-1.0..1.0));
+                let matrix: Array2<f64> =
+                    ArrayBase::from_shape_fn(matrix_shape, |_| rng.gen_range(-1.0..1.0));
                 let matrix = normalize_columns(&matrix).expect("can't normalize matrix");
                 let input_signal = rand_pulses_signal(
                     &mut rng,
@@ -252,16 +257,17 @@ mod tests {
                     .expect("failed to compute support distace");
 
                 l2_err.1[0] += l2_relative_err(&input_signal, &threshold_alg_result)
-                    .expect("can't calucalate l2 error").powf(2.0);
-                l2_err.1[1] +=
-                    l2_relative_err(&input_signal, &wmp_result)
-                    .expect("can't calucalate l2 error").powf(2.0);
-                l2_err.1[2] +=
-                    l2_relative_err(&input_signal, &mp_result)
-                    .expect("can't calucalate l2 error").powf(2.0);
-                l2_err.1[3] +=
-                    l2_relative_err(&input_signal, &omp_result)
-                    .expect("can't calucalate l2 error").powf(2.0);
+                    .expect("can't calucalate l2 error")
+                    .powf(2.0);
+                l2_err.1[1] += l2_relative_err(&input_signal, &wmp_result)
+                    .expect("can't calucalate l2 error")
+                    .powf(2.0);
+                l2_err.1[2] += l2_relative_err(&input_signal, &mp_result)
+                    .expect("can't calucalate l2 error")
+                    .powf(2.0);
+                l2_err.1[3] += l2_relative_err(&input_signal, &omp_result)
+                    .expect("can't calucalate l2 error")
+                    .powf(2.0);
             }
             supp_dist.1.iter_mut().for_each(|dist| {
                 *dist = *dist / sample_size as f64;
@@ -382,6 +388,15 @@ mod tests {
             &BLACK,
         );
         chart.draw_series(line_series).unwrap();
+    }
+
+    #[test]
+    fn l1_relaxzation_test() {
+        let lasso_lambda = 1e-2;
+        let iter_num = 1000;
+        let bs_threshold = 1e-2;
+        let sparse_alg_lasso = SparseAlgLasso::new(lasso_lambda, Box::new(LassoFista::new(iter_num, bs_threshold)));
+        sparse_alg_lasso.so
     }
 
     #[test]

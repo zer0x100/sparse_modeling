@@ -1,40 +1,31 @@
-use super::super::SparseAlg;
 use crate::prelude::*;
 
 pub struct LassoIstaLipshitzSearch {
-    lambda: f64,
     iter_num: usize,
     threshold: f64,
 }
 
 impl LassoIstaLipshitzSearch {
     #[allow(dead_code)]
-    pub fn new(lambda: f64, iter_num: usize, threshold: f64) -> Self {
+    pub fn new(iter_num: usize, threshold: f64) -> Self {
         Self {
-            lambda,
             iter_num,
             threshold,
         }
     }
     #[allow(dead_code)]
-    pub fn set(&mut self, lambda: f64, iter_num: usize, threshold: f64) {
-        self.lambda = lambda;
+    pub fn set(&mut self, iter_num: usize, threshold: f64) {
         self.iter_num = iter_num;
         self.threshold = threshold;
     }
 }
 
-impl SparseAlg for LassoIstaLipshitzSearch {
-    fn solve(&self, mat: &Array2<f64>, y: &Array1<f64>) -> Result<Array1<f64>> {
+impl LassoAlg for LassoIstaLipshitzSearch {
+    fn solve(&self, mat: &Array2<f64>, y: &Array1<f64>, lambda: f64) -> Result<Array1<f64>> {
         //check data
-        if mat.shape()[0] != y.shape()[0] || mat.shape()[0] > mat.shape()[1] {
-            return Err(anyhow!(format!(
-                "mat's shape is {}x{} / y's size is {}",
-                mat.shape()[0],
-                mat.shape()[1],
-                y.shape()[0]
-            )
-            .to_string()));
+        match is_underestimated_sys(mat, y) {
+            Err(msg) => return Err(msg),
+            Ok(_) => (),
         }
 
         //initialization
@@ -71,7 +62,7 @@ impl SparseAlg for LassoIstaLipshitzSearch {
                     + 0.5 * lipshitz * (&v - &prev_x).norm_l2().powi(2);
             }
 
-            x = st_array1(self.lambda / lipshitz, &v);
+            x = st_array1(lambda / lipshitz, &v);
             if (prev_x - x.clone()).norm_l2() < self.threshold {
                 break;
             }
