@@ -24,7 +24,6 @@ mod prelude {
     pub use std::cmp;
     pub use std::collections::HashSet;
     pub use std::{f64::consts::PI, fs};
-    pub const F64_ERR_RANGE: f64 = 1e-8;
 }
 
 #[cfg(test)]
@@ -40,9 +39,10 @@ mod tests {
         let matrix: Array2<f64> = ArrayBase::from_shape_fn((30, 50), |_| rng.gen_range(-1.0..1.0));
         let output_data = matrix.dot(&input_data);
 
-        let lambda = 1.;
-        let iter_num = 200;
-        let threshold = 0.;
+        let lambda = 1e-2;
+        let iter_num = 5000;
+        let threshold = 1e-20;
+        let supp_err_range = 1e-2;
         let lasso_ista = LassoIsta::new(iter_num, threshold);
         let ista_result = lasso_ista
             .solve(&matrix, &output_data, lambda)
@@ -62,7 +62,10 @@ mod tests {
 
         //グラフの軸設定など
         let mut chart = ChartBuilder::on(&root)
-            .caption("lasso_test", ("sans-serif", 50).into_font())
+            .caption(format!("supp_dist|| ista: {:.3} / fista: {:.3}",
+                support_distance(&input_data, &ista_result, supp_err_range).unwrap(),
+                support_distance(&input_data, &fista_result, supp_err_range).unwrap(),
+            ), ("sans-serif", 50).into_font())
             .margin(10) //上下左右の余白
             .x_label_area_size(30) //x軸ラベル部分の余白
             .y_label_area_size(30) //y軸ラベル部分の余白
@@ -77,13 +80,13 @@ mod tests {
         //データの描画。(x, y)のイテレータとしてデータ点を渡す。
         let point_series = PointSeries::<_, _, Circle<_, _>, _>::new(
             input_data.iter().enumerate().map(|(i, x)| (i, *x)),
-            2,
+            4,
             &RED,
         );
         chart.draw_series(point_series).unwrap();
         let point_series = PointSeries::<_, _, Circle<_, _>, _>::new(
             ista_result.iter().enumerate().map(|(i, x)| (i, *x)),
-            2,
+            3,
             &BLUE,
         );
         chart.draw_series(point_series).unwrap();
@@ -108,6 +111,7 @@ mod tests {
 
         let threshold = 1e-2;
         let iter_num = 10000;
+        let supp_err_range = 1e-8;
         let threshold_alg = ThresholdAlg::new(15);
         let threshold_result = threshold_alg.solve(&matrix, &output_data).unwrap();
         let wmp = Wmp::new(threshold, iter_num, 0.5).unwrap();
@@ -119,10 +123,10 @@ mod tests {
 
         println!(
             "supp_dist|| threshold: {}, wmp: {}, mp: {}, omp: {}",
-            support_distance(&input_data, &threshold_result).unwrap(),
-            support_distance(&input_data, &wmp_result).unwrap(),
-            support_distance(&input_data, &mp_result).unwrap(),
-            support_distance(&input_data, &omp_result).unwrap(),
+            support_distance(&input_data, &threshold_result, supp_err_range).unwrap(),
+            support_distance(&input_data, &wmp_result, supp_err_range).unwrap(),
+            support_distance(&input_data, &mp_result, supp_err_range).unwrap(),
+            support_distance(&input_data, &omp_result, supp_err_range).unwrap(),
         );
         println!(
             "l2_relative_err|| threshold: {}, wmp: {}, mp: {}, omp: {}",
@@ -194,7 +198,8 @@ mod tests {
         //set parameters
         let threshold = 1e-2;
         let sample_size = 200;
-        let iter_num = 10000;
+        let iter_num = 1000;
+        let supp_err_range = 1e-8;
         let matrix_shape = (30, 50);
         let supp_sizes_range = 1..11;
         let pulse_value_range = (1.0 /* min */, 2.0 /* max */); //絶対値
@@ -247,13 +252,13 @@ mod tests {
                     .solve(&matrix, &output_signal)
                     .expect("omp(orthogonal matching pursuit) failed");
 
-                supp_dist.1[0] += support_distance(&input_signal, &threshold_alg_result)
+                supp_dist.1[0] += support_distance(&input_signal, &threshold_alg_result, supp_err_range)
                     .expect("failed to compute support distace");
-                supp_dist.1[1] += support_distance(&input_signal, &wmp_result)
+                supp_dist.1[1] += support_distance(&input_signal, &wmp_result, supp_err_range)
                     .expect("failed to compute support distace");
-                supp_dist.1[2] += support_distance(&input_signal, &mp_result)
+                supp_dist.1[2] += support_distance(&input_signal, &mp_result, supp_err_range)
                     .expect("failed to compute support distace");
-                supp_dist.1[3] += support_distance(&input_signal, &omp_result)
+                supp_dist.1[3] += support_distance(&input_signal, &omp_result, supp_err_range)
                     .expect("failed to compute support distace");
 
                 l2_err.1[0] += l2_relative_err(&input_signal, &threshold_alg_result)
@@ -394,13 +399,14 @@ mod tests {
     fn l1_relaxzation_test() {
         //set parameters
         let threshold = 1e-2;
-        let bs_threshold = 1e-10;
-        let bs_lasso_lambda = 1e-2;
+        let bs_threshold = 1e-30;
+        let bs_lasso_lambda = 1e-4;
         let sample_size = 200;
-        let iter_num = 10000;
+        let iter_num = 100000;
         let matrix_shape = (30, 50);
         let supp_sizes_range = 1..11;
         let pulse_value_range = (1.0 /* min */, 2.0 /* max */); //絶対値
+        let supp_err_range = 1e-2;
 
         //set algorithms
         let omp = Omp::new(threshold);
@@ -414,7 +420,7 @@ mod tests {
         let mut supp_dist_list = Vec::<(usize, [f64; 3])>::new();
         let mut l2_err_list = Vec::<(usize, [f64; 3])>::new();
 
-        println!("calucalating mps...");
+        println!("calucalating omp and l1 relaxzation...");
         let mut rng = rand::thread_rng();
         for support_size in supp_sizes_range.clone() {
             println!(
@@ -450,11 +456,11 @@ mod tests {
                     .solve(&matrix, &output_signal)
                     .expect("lasso by bp failed");
 
-                supp_dist.1[0] += support_distance(&input_signal, &omp_result)
+                supp_dist.1[0] += support_distance(&input_signal, &omp_result, supp_err_range)
                     .expect("failed to compute support distace");
-                supp_dist.1[1] += support_distance(&input_signal, &lasso_result)
+                supp_dist.1[1] += support_distance(&input_signal, &lasso_result, supp_err_range)
                     .expect("failed to compute support distace");
-                supp_dist.1[2] += support_distance(&input_signal, &by_bp_result)
+                supp_dist.1[2] += support_distance(&input_signal, &by_bp_result, supp_err_range)
                     .expect("failed to compute support distace");
 
                 l2_err.1[0] += l2_relative_err(&input_signal, &omp_result)
@@ -476,7 +482,7 @@ mod tests {
             supp_dist_list.push(supp_dist);
             l2_err_list.push(l2_err);
         }
-        println!("finished calucalating mps");
+        println!("finished calucalating omp and l1 relaxzation");
 
         //Plot
         //support distance
@@ -609,10 +615,10 @@ mod tests {
         );
 
         let a = array![[1., 3.], [1., 2.]];
-        assert!((pseudo_inverse(&a).unwrap() - a.inv().unwrap()).norm_l2() < F64_ERR_RANGE);
+        assert!((pseudo_inverse(&a).unwrap() - a.inv().unwrap()).norm_l2() < 1e-8);
 
         let a = array![1., 2., 0., 5., 0.];
-        let supp = support(&a);
+        let supp = support(&a, 1e-10);
         assert!(
             supp.contains(&0)
                 && supp.contains(&1)
@@ -621,6 +627,6 @@ mod tests {
                 && !supp.contains(&4)
         );
         let b = array![0., 3., 0., 4., 2.];
-        assert!((support_distance(&a, &b).unwrap() - 0.33333333333333).abs() < F64_ERR_RANGE);
+        assert!((support_distance(&a, &b, 1e-10).unwrap() - 0.33333333333333).abs() < 1e-8);
     }
 }

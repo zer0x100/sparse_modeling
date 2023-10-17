@@ -148,7 +148,7 @@ pub fn pseudo_inverse(mat: &Array2<f64>) -> Result<Array2<f64>> {
 }
 
 #[allow(dead_code)]
-pub fn support_distance(vec1: &Array1<f64>, vec2: &Array1<f64>) -> Result<f64> {
+pub fn support_distance(vec1: &Array1<f64>, vec2: &Array1<f64>, err_range: f64) -> Result<f64> {
     if vec1.len() != vec2.len() {
         return Err(anyhow!(format!(
             "two vector sizes are different. vec1.len(): {}/ vec2.len(): {}",
@@ -157,8 +157,8 @@ pub fn support_distance(vec1: &Array1<f64>, vec2: &Array1<f64>) -> Result<f64> {
         )
         .to_string()));
     }
-    let supp1 = support(&vec1);
-    let supp2 = support(&vec2);
+    let supp1 = support(&vec1, err_range);
+    let supp2 = support(&vec2, err_range);
     let supp1_and_supp2: HashSet<usize> = supp1
         .iter()
         .filter(|i| supp2.contains(*i))
@@ -171,10 +171,10 @@ pub fn support_distance(vec1: &Array1<f64>, vec2: &Array1<f64>) -> Result<f64> {
 }
 
 #[allow(dead_code)]
-pub fn support(vec: &Array1<f64>) -> HashSet<usize> {
+pub fn support(vec: &Array1<f64>, err_range: f64) -> HashSet<usize> {
     let mut supp = HashSet::new();
     vec.iter().enumerate().for_each(|(i, v)| {
-        if v.abs() > F64_ERR_RANGE {
+        if v.abs() > err_range * 0.5 {
             supp.insert(i);
         }
     });

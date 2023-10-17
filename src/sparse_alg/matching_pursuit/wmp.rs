@@ -57,16 +57,12 @@ impl SparseAlg for Wmp {
                 let proj = (column_j.t().dot(&r) / column_j.norm_l2()).abs();
                 if proj >= self.proj_ratio * r.norm_l2() {
                     target_idx = j;
-                    max_proj = proj;
                     break;
                 }
                 if max_proj < proj {
                     target_idx = j;
                     max_proj = proj;
                 }
-            }
-            if max_proj.abs() < F64_ERR_RANGE {
-                return Ok(x);
             }
 
             //support update
