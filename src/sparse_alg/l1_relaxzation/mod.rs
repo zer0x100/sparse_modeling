@@ -9,6 +9,7 @@ use crate::prelude::*;
 
 pub trait L1Relaxzation {
     fn solve_l1(&self, mat: &Array2<f64>, y: &Array1<f64>) -> Result<Array1<f64>>;
+    fn by_basis_pursuit(&self) -> bool;
 }
 
 impl<T: L1Relaxzation> SparseAlg for T {
@@ -18,6 +19,10 @@ impl<T: L1Relaxzation> SparseAlg for T {
         match is_underestimated_sys(mat, y) {
             Err(msg) => return Err(msg),
             Ok(_) => (),
+        }
+
+        if !self.by_basis_pursuit() {
+            return self.solve_l1(mat, y);
         }
 
         //calucalate mat's column sizes and normalize them
