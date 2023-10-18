@@ -396,15 +396,15 @@ mod tests {
     }
 
     #[test]
-    fn l1_relax_test() {
+    fn l1_relax_1sample_test() {
         let threshold = 1e-20;
-        let iter_num = 100000;
+        let iter_num = 10000;
         let matrix_shape = (30, 50);
-        let pulse_num = 5;
+        let pulse_num = 8;
         let pulse_value_range = (1.0 /* min */, 2.0 /* max */); //絶対値
         let supp_err_range = 1e-2;
 
-        let focuss = FOCUSS::new(threshold, iter_num, true);
+        let focuss = L1Focuss::new(threshold, iter_num, true);
 
         let mut rng = rand::thread_rng();
         let input_data: Array1<f64> =
@@ -413,6 +413,7 @@ mod tests {
         let output_data = matrix.dot(&input_data);
 
         let focuss_result = focuss.solve(&matrix, &output_data).unwrap();
+        let focuss_bs_res = focuss.solve_l1(&matrix, &output_data).unwrap();
 
         println!(
             "supp_dist|| focuss: {}",
@@ -427,7 +428,7 @@ mod tests {
 
         //Draw ista_result, fista_result, and input_data
         //描画先をBackendとして指定。ここでは画像に出力するためBitMapBackend
-        let root = BitMapBackend::new("results/l1_relax.png", (640, 480)).into_drawing_area();
+        let root = BitMapBackend::new("results/l1_relax_1sample.png", (640, 480)).into_drawing_area();
         //背景を白に
         root.fill(&WHITE).unwrap();
 
@@ -435,7 +436,10 @@ mod tests {
 
         //グラフの軸設定など
         let mut chart = ChartBuilder::on(&root)
-            .caption("l1_relax", ("sans-serif", 50).into_font())
+            .caption(&format!(
+                "supp_dist|| focuss: {}",
+                support_distance(&input_data, &focuss_result, supp_err_range).unwrap(),
+            ), ("sans-serif", 20).into_font())
             .margin(10) //上下左右の余白
             .x_label_area_size(30) //x軸ラベル部分の余白
             .y_label_area_size(30) //y軸ラベル部分の余白
@@ -455,8 +459,14 @@ mod tests {
         );
         chart.draw_series(point_series).unwrap();
         let point_series = PointSeries::<_, _, Circle<_, _>, _>::new(
-            focuss_result.iter().enumerate().map(|(i, x)| (i, *x)),
+            focuss_bs_res.iter().enumerate().map(|(i, x)| (i, *x)),
             3,
+            &GREEN,
+        );
+        chart.draw_series(point_series).unwrap();
+        let point_series = PointSeries::<_, _, Circle<_, _>, _>::new(
+            focuss_result.iter().enumerate().map(|(i, x)| (i, *x)),
+            2,
             &BLUE,
         );
         chart.draw_series(point_series).unwrap();
@@ -468,8 +478,8 @@ mod tests {
         let threshold = 1e-2;
         let bs_threshold = 1e-20;
         let bs_lasso_lambda = 1e-3;
-        let sample_size = 200;
-        let iter_num = 100000;
+        let sample_size = 20;
+        let iter_num = 50000;
         let matrix_shape = (30, 50);
         let supp_sizes_range = 1..11;
         let pulse_value_range = (1.0 /* min */, 2.0 /* max */); //絶対値
@@ -482,6 +492,7 @@ mod tests {
             Box::new(LassoFista::new(iter_num, bs_threshold)),
             true,
         );
+        let focuss = L1Focuss::new(bs_threshold, 1000, true);
 
         //ThresholdAlg, Wmp, Mp, Ompの順で結果を格納
         let mut supp_dist_list = Vec::<(usize, [f64; 3])>::new();
@@ -516,16 +527,14 @@ mod tests {
                 let omp_result = omp
                     .solve(&matrix, &output_signal)
                     .expect("omp(orthogonal matching pursuit) failed");
-                let lasso_result = lasso_by_bp
-                    .solve_l1(&matrix, &output_signal)
-                    .expect("lasso failed");
+                let focuss_result = focuss.solve(&matrix, &output_signal).unwrap();
                 let by_bp_result = lasso_by_bp
                     .solve(&matrix, &output_signal)
                     .expect("lasso by bp failed");
 
                 supp_dist.1[0] += support_distance(&input_signal, &omp_result, supp_err_range)
                     .expect("failed to compute support distace");
-                supp_dist.1[1] += support_distance(&input_signal, &lasso_result, supp_err_range)
+                supp_dist.1[1] += support_distance(&input_signal, &focuss_result, supp_err_range)
                     .expect("failed to compute support distace");
                 supp_dist.1[2] += support_distance(&input_signal, &by_bp_result, supp_err_range)
                     .expect("failed to compute support distace");
@@ -533,7 +542,7 @@ mod tests {
                 l2_err.1[0] += l2_relative_err(&input_signal, &omp_result)
                     .expect("can't calucalate l2 error")
                     .powf(2.0);
-                l2_err.1[1] += l2_relative_err(&input_signal, &lasso_result)
+                l2_err.1[1] += l2_relative_err(&input_signal, &focuss_result)
                     .expect("can't calucalate l2 error")
                     .powf(2.0);
                 l2_err.1[2] += l2_relative_err(&input_signal, &by_bp_result)

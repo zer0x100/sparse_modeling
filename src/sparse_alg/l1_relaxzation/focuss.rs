@@ -1,13 +1,13 @@
 use super::L1Relaxzation;
 use crate::prelude::*;
 
-pub struct FOCUSS {
+pub struct L1Focuss {
     threshold: f64,
     iter_num: usize,
     by_bp: bool,
 }
 
-impl FOCUSS {
+impl L1Focuss {
     #[allow(dead_code)]
     pub fn new(threshold: f64, iter_num: usize, by_bp: bool) -> Self {
         Self { threshold, iter_num, by_bp }
@@ -20,7 +20,7 @@ impl FOCUSS {
     }
 }
 
-impl L1Relaxzation for FOCUSS {
+impl L1Relaxzation for L1Focuss {
     fn solve_l1(&self, mat: &Array2<f64>, y: &Array1<f64>) -> Result<Array1<f64>> {
         match is_underestimated_sys(mat, y) {
             Err(msg) => return Err(msg),
@@ -30,27 +30,29 @@ impl L1Relaxzation for FOCUSS {
         //initialization
         let mut x: Array1<f64> = Array::ones(mat.shape()[1]);
         let mut prev_x;
-        let mut weight_mat: Array2<f64> = ArrayBase::from_shape_fn(
-            (mat.shape()[1], mat.shape()[1]),
-            |(i, j)| {
-                if i != j { 0.0 }
-                else { 1. }
-            }
-        );
+
+        let mut weights = x.clone();
 
         for _ in 0..self.iter_num {
             prev_x = x;
-            x = weight_mat
-                .dot(&weight_mat)
-                .dot(&mat.t())
-                .dot(&pseudo_inverse(
-                    &mat.dot(&weight_mat)
-                        .dot(&weight_mat)
-                        .dot(&mat.t())
-                ).unwrap())
+            let mut temp = mat.t().to_owned();
+            for i in 0..weights.shape()[0] {
+                for j in 0..temp.shape()[1] {
+                    temp[[i, j]] *= weights[i];
+                }
+            }
+
+            //update x
+            x = temp.dot(
+                &pseudo_inverse(
+                    &mat.dot(&temp)
+                ).unwrap()
+                )
                 .dot(y);
+
+            //update weights
             for i in 0..x.shape()[0] {
-                weight_mat[[i, i]] = x[i].abs().sqrt();
+                weights[i] = x[i].abs();
             }
 
             if (x.clone() - prev_x).norm_l2() < self.threshold {
