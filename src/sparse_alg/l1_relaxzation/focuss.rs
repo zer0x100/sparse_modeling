@@ -53,6 +53,9 @@ impl L1Relaxzation for L1Focuss {
             //update weights
             for i in 0..x.shape()[0] {
                 weights[i] = x[i].abs();
+                if weights[i] < F64_EPS {
+                    weights[i] = 0.;
+                }
             }
 
             if (x.clone() - prev_x).norm_l2() < self.threshold {

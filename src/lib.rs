@@ -24,6 +24,7 @@ mod prelude {
     pub use std::cmp;
     pub use std::collections::HashSet;
     pub use std::{f64::consts::PI, fs};
+    pub const F64_EPS: f64 = 1e-10;
 }
 
 #[cfg(test)]
@@ -40,7 +41,7 @@ mod tests {
         let output_data = matrix.dot(&input_data);
 
         let lambda = 1e-2;
-        let iter_num = 5000;
+        let iter_num = 2000;
         let threshold = 1e-20;
         let supp_err_range = 1e-2;
         let lasso_ista = LassoIsta::new(iter_num, threshold);
@@ -398,7 +399,7 @@ mod tests {
     #[test]
     fn l1_relax_1sample_test() {
         let threshold = 1e-20;
-        let iter_num = 10000;
+        let iter_num = 50;
         let matrix_shape = (30, 50);
         let pulse_num = 8;
         let pulse_value_range = (1.0 /* min */, 2.0 /* max */); //絶対値
@@ -477,9 +478,7 @@ mod tests {
         //set parameters
         let threshold = 1e-2;
         let bs_threshold = 1e-20;
-        let bs_lasso_lambda = 1e-3;
-        let sample_size = 20;
-        let iter_num = 50000;
+        let sample_size = 200;
         let matrix_shape = (30, 50);
         let supp_sizes_range = 1..11;
         let pulse_value_range = (1.0 /* min */, 2.0 /* max */); //絶対値
@@ -488,11 +487,11 @@ mod tests {
         //set algorithms
         let omp = Omp::new(threshold);
         let lasso_by_bp = SparseAlgLasso::new(
-            bs_lasso_lambda,
-            Box::new(LassoFista::new(iter_num, bs_threshold)),
+            1e-3,
+            Box::new(LassoFista::new(10000, bs_threshold)),
             true,
         );
-        let focuss = L1Focuss::new(bs_threshold, 1000, true);
+        let focuss = L1Focuss::new(bs_threshold, 50, true);
 
         //ThresholdAlg, Wmp, Mp, Ompの順で結果を格納
         let mut supp_dist_list = Vec::<(usize, [f64; 3])>::new();

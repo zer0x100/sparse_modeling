@@ -140,7 +140,7 @@ pub fn pseudo_inverse(mat: &Array2<f64>) -> Result<Array2<f64>> {
 
     let sv_size = cmp::min(mat.shape()[0], mat.shape()[1]);
     for i in 0..sv_size {
-        if s[i] != 0. {
+        if s[i].abs() > F64_EPS {
             sv_inverse[[i, i]] = 1. / s[i];
         }
     }
