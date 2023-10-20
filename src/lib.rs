@@ -487,11 +487,11 @@ mod tests {
         //set algorithms
         let omp = Omp::new(threshold);
         let lasso_by_bp = SparseAlgLasso::new(
-            1e-3,
-            Box::new(LassoFista::new(10000, bs_threshold)),
+            1e-4,
+            Box::new(LassoFista::new(50000, bs_threshold)),
             true,
         );
-        let focuss = L1Focuss::new(bs_threshold, 50, true);
+        let focuss = L1Focuss::new(bs_threshold, 200, true);
 
         //ThresholdAlg, Wmp, Mp, Ompの順で結果を格納
         let mut supp_dist_list = Vec::<(usize, [f64; 3])>::new();
