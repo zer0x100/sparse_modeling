@@ -4,6 +4,7 @@ Lassoを解くアルゴリズム実装
 }}
  */
 mod fista;
+mod irls;
 mod ista;
 mod ista_lipshitz_search;
 

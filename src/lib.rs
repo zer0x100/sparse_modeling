@@ -1,3 +1,4 @@
+mod cg;
 mod data_convert;
 mod gen_signal;
 mod lasso_alg;
@@ -63,10 +64,14 @@ mod tests {
 
         //グラフの軸設定など
         let mut chart = ChartBuilder::on(&root)
-            .caption(format!("supp_dist|| ista: {:.3} / fista: {:.3}",
-                support_distance(&input_data, &ista_result, supp_err_range).unwrap(),
-                support_distance(&input_data, &fista_result, supp_err_range).unwrap(),
-            ), ("sans-serif", 50).into_font())
+            .caption(
+                format!(
+                    "supp_dist|| ista: {:.3} / fista: {:.3}",
+                    support_distance(&input_data, &ista_result, supp_err_range).unwrap(),
+                    support_distance(&input_data, &fista_result, supp_err_range).unwrap(),
+                ),
+                ("sans-serif", 50).into_font(),
+            )
             .margin(10) //上下左右の余白
             .x_label_area_size(30) //x軸ラベル部分の余白
             .y_label_area_size(30) //y軸ラベル部分の余白
@@ -105,7 +110,7 @@ mod tests {
 
         let mut rng = rand::thread_rng();
         let input_data: Array1<f64> =
-            rand_pulses_signal(&mut rng, 50, 5, 1.0, 2.0).expect("can't generate signal");
+            rand_pulses_signal(&mut rng, 50, 10, 1.0, 2.0).expect("can't generate signal");
         let matrix: Array2<f64> = ArrayBase::from_shape_fn((30, 50), |_| rng.gen_range(-1.0..1.0));
         let matrix = normalize_columns(&matrix).unwrap();
         let output_data = matrix.dot(&input_data);
@@ -253,8 +258,9 @@ mod tests {
                     .solve(&matrix, &output_signal)
                     .expect("omp(orthogonal matching pursuit) failed");
 
-                supp_dist.1[0] += support_distance(&input_signal, &threshold_alg_result, supp_err_range)
-                    .expect("failed to compute support distace");
+                supp_dist.1[0] +=
+                    support_distance(&input_signal, &threshold_alg_result, supp_err_range)
+                        .expect("failed to compute support distace");
                 supp_dist.1[1] += support_distance(&input_signal, &wmp_result, supp_err_range)
                     .expect("failed to compute support distace");
                 supp_dist.1[2] += support_distance(&input_signal, &mp_result, supp_err_range)
@@ -408,9 +414,16 @@ mod tests {
         let focuss = L1Focuss::new(threshold, iter_num, true);
 
         let mut rng = rand::thread_rng();
-        let input_data: Array1<f64> =
-            rand_pulses_signal(&mut rng, matrix_shape.1, pulse_num, pulse_value_range.0, pulse_value_range.1).expect("can't generate a signal");
-        let matrix: Array2<f64> = ArrayBase::from_shape_fn(matrix_shape, |_| rng.gen_range(-1.0..1.0));
+        let input_data: Array1<f64> = rand_pulses_signal(
+            &mut rng,
+            matrix_shape.1,
+            pulse_num,
+            pulse_value_range.0,
+            pulse_value_range.1,
+        )
+        .expect("can't generate a signal");
+        let matrix: Array2<f64> =
+            ArrayBase::from_shape_fn(matrix_shape, |_| rng.gen_range(-1.0..1.0));
         let output_data = matrix.dot(&input_data);
 
         let focuss_result = focuss.solve(&matrix, &output_data).unwrap();
@@ -429,7 +442,8 @@ mod tests {
 
         //Draw ista_result, fista_result, and input_data
         //描画先をBackendとして指定。ここでは画像に出力するためBitMapBackend
-        let root = BitMapBackend::new("results/l1_relax_1sample.png", (640, 480)).into_drawing_area();
+        let root =
+            BitMapBackend::new("results/l1_relax_1sample.png", (640, 480)).into_drawing_area();
         //背景を白に
         root.fill(&WHITE).unwrap();
 
@@ -437,10 +451,13 @@ mod tests {
 
         //グラフの軸設定など
         let mut chart = ChartBuilder::on(&root)
-            .caption(&format!(
-                "supp_dist|| focuss: {}",
-                support_distance(&input_data, &focuss_result, supp_err_range).unwrap(),
-            ), ("sans-serif", 20).into_font())
+            .caption(
+                &format!(
+                    "supp_dist|| focuss: {}",
+                    support_distance(&input_data, &focuss_result, supp_err_range).unwrap(),
+                ),
+                ("sans-serif", 20).into_font(),
+            )
             .margin(10) //上下左右の余白
             .x_label_area_size(30) //x軸ラベル部分の余白
             .y_label_area_size(30) //y軸ラベル部分の余白
@@ -486,11 +503,8 @@ mod tests {
 
         //set algorithms
         let omp = Omp::new(threshold);
-        let lasso_by_bp = SparseAlgLasso::new(
-            1e-4,
-            Box::new(LassoFista::new(50000, bs_threshold)),
-            true,
-        );
+        let lasso_by_bp =
+            SparseAlgLasso::new(1e-4, Box::new(LassoFista::new(50000, bs_threshold)), true);
         let focuss = L1Focuss::new(bs_threshold, 200, true);
 
         //ThresholdAlg, Wmp, Mp, Ompの順で結果を格納
@@ -561,7 +575,8 @@ mod tests {
 
         //Plot
         //support distance
-        let root = BitMapBackend::new("results/l1_relaxzation_supp_dist.png", (640, 480)).into_drawing_area();
+        let root = BitMapBackend::new("results/l1_relaxzation_supp_dist.png", (640, 480))
+            .into_drawing_area();
         //背景を白に
         root.fill(&WHITE).unwrap();
 
@@ -608,7 +623,8 @@ mod tests {
         chart.draw_series(line_series).unwrap();
 
         //l2 relative error
-        let root = BitMapBackend::new("results/l1_relaxzation_l2_rerr.png", (640, 480)).into_drawing_area();
+        let root = BitMapBackend::new("results/l1_relaxzation_l2_rerr.png", (640, 480))
+            .into_drawing_area();
         //背景を白に
         root.fill(&WHITE).unwrap();
 

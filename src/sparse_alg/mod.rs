@@ -3,11 +3,7 @@ mod matching_pursuit;
 
 use crate::prelude::*;
 
-pub use l1_relaxzation::{
-    L1Relaxzation,
-    by_lasso::SparseAlgLasso,
-    focuss::L1Focuss,
-};
+pub use l1_relaxzation::{by_lasso::SparseAlgLasso, focuss::L1Focuss, L1Relaxzation};
 pub use matching_pursuit::{mp::Mp, omp::Omp, threshold_alg::ThresholdAlg, wmp::Wmp};
 
 pub trait SparseAlg {

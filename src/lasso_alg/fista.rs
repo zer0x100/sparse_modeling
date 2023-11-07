@@ -30,7 +30,7 @@ impl LassoAlg for LassoFista {
 
         //initialization
         let mut x = mat.t().dot(y);
-        let mut preve_x;
+        let mut prev_x;
         let mut z = mat.t().dot(y);
         let mut prev_z;
         let lipshitz = matrix_l2(&mat.t().dot(mat)) / lambda;
@@ -38,13 +38,13 @@ impl LassoAlg for LassoFista {
         let mut prev_beta;
 
         for _ in 0..self.iter_num {
-            preve_x = x.clone();
+            prev_x = x.clone();
             let v = &z + 1. / lipshitz / lambda * mat.t().dot(&(y - mat.dot(&x)));
             x = st_array1(1. / lipshitz, &v);
             prev_beta = beta;
             beta = (1. + (1. + 4. * beta.powf(2.)).sqrt()) * 0.5;
             prev_z = z.clone();
-            z = &x + (prev_beta - 1.) / beta * (&x - preve_x);
+            z = &x + (prev_beta - 1.) / beta * (&x - prev_x);
 
             if (&z - prev_z).norm_l2() < self.threshold {
                 break;

@@ -10,7 +10,11 @@ pub struct L1Focuss {
 impl L1Focuss {
     #[allow(dead_code)]
     pub fn new(threshold: f64, iter_num: usize, by_bp: bool) -> Self {
-        Self { threshold, iter_num, by_bp }
+        Self {
+            threshold,
+            iter_num,
+            by_bp,
+        }
     }
     #[allow(dead_code)]
     pub fn set(&mut self, threshold: f64, iter_num: usize, by_bp: bool) {
@@ -43,12 +47,7 @@ impl L1Relaxzation for L1Focuss {
             }
 
             //update x
-            x = temp.dot(
-                &pseudo_inverse(
-                    &mat.dot(&temp)
-                ).unwrap()
-                )
-                .dot(y);
+            x = temp.dot(&pseudo_inverse(&mat.dot(&temp)).unwrap()).dot(y);
 
             //update weights
             for i in 0..x.shape()[0] {
