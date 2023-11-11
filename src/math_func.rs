@@ -216,3 +216,59 @@ pub fn is_underestimated_sys(mat: &Array2<f64>, y: &Array1<f64>) -> Result<()> {
     }
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+
+    use crate::prelude::*;
+
+    #[test]
+    fn math_func_test() {
+        std::env::set_var("RUST_BACKTRACE", "1");
+
+        let a = array![[1., 1., 1.], [1., 2., 3.],];
+        assert_eq!(0.9899494936611665, mutal_coherence(&a));
+        assert_eq!(0.9899494936611665, babel_func(&a, 1).unwrap());
+
+        let arr = array![0., 1.];
+        let arr2 = array![2., 3.];
+        let arr3 = array![4., 5.];
+        assert_eq!(
+            columns_to_2darray(2, [arr, arr2, arr3].into_iter()).unwrap(),
+            array![[0., 2., 4.], [1., 3., 5.],]
+        );
+
+        let arr = array![[1., 2., 3.], [2., 5., 7.],];
+        let arr = normalize_columns(&arr).unwrap();
+        assert_eq!(
+            arr,
+            array![
+                [
+                    1. / 5.0f64.powf(0.5),
+                    2. / 29.0f64.powf(0.5),
+                    3. / 58.0f64.powf(0.5)
+                ],
+                [
+                    2. / 5.0f64.powf(0.5),
+                    5. / 29.0f64.powf(0.5),
+                    7. / 58.0f64.powf(0.5)
+                ],
+            ]
+        );
+
+        let a = array![[1., 3.], [1., 2.]];
+        assert!((pseudo_inverse(&a).unwrap() - a.inv().unwrap()).norm_l2() < 1e-8);
+
+        let a = array![1., 2., 0., 5., 0.];
+        let supp = support(&a, 1e-10);
+        assert!(
+            supp.contains(&0)
+                && supp.contains(&1)
+                && !supp.contains(&2)
+                && supp.contains(&3)
+                && !supp.contains(&4)
+        );
+        let b = array![0., 3., 0., 4., 2.];
+        assert!((support_distance(&a, &b, 1e-10).unwrap() - 0.33333333333333).abs() < 1e-8);
+    }
+}

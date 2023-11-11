@@ -4,6 +4,8 @@ L0ノルムをLp(p = 0~1)など凸なものに緩和する。
 */
 pub mod by_lasso;
 pub mod focuss;
+#[cfg(test)]
+mod tests;
 
 use crate::prelude::*;
 
