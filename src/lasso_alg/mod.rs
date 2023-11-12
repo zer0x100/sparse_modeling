@@ -8,6 +8,7 @@ mod irls;
 mod ista;
 mod ista_lipshitz_search;
 mod ssf;
+mod irls_shrinkage;
 #[cfg(test)]
 mod tests;
 
@@ -18,6 +19,7 @@ pub use irls::LassoIrls;
 pub use ista::LassoIsta;
 pub use ista_lipshitz_search::LassoIstaLipshitzSearch;
 pub use ssf::LassoSSF;
+pub use irls_shrinkage::LassoIrlsShrink;
 
 pub trait LassoAlg {
     fn solve(&self, mat: &Array2<f64>, y: &Array1<f64>, lambda: f64) -> Result<Array1<f64>>;
