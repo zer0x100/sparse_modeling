@@ -1,4 +1,6 @@
-use crate::prelude::*;
+use plotters::style::full_palette::ORANGE;
+
+use super::*;
 
 #[test]
 fn lasso_1sample_test() {
@@ -9,7 +11,7 @@ fn lasso_1sample_test() {
     let output_data = matrix.dot(&input_data);
 
     let lambda = 1e-2;
-    let iter_num = 5;
+    let iter_num = 2000;
     let threshold = 1e-20;
     let supp_err_range = 1e-2;
     let lasso_ista = LassoIsta::new(iter_num, threshold);
@@ -20,10 +22,14 @@ fn lasso_1sample_test() {
     let fista_result = lasso_fista
         .solve(&matrix, &output_data, lambda)
         .expect("can't solve fista");
-    let irls = LassoIrls::new(iter_num, threshold);
+    let irls = LassoIrls::new(iter_num, threshold, 1e-4);
     let irls_result = irls
         .solve(&matrix, &output_data, lambda)
-        .expect("can't solve lasso's ista");
+        .expect("can't solve lasso's irls");
+    let ssf = LassoSSF::new(iter_num, threshold);
+    let ssf_result = ssf
+        .solve(&matrix, &output_data, lambda)
+        .expect("can't solve lasso's ssf");
 
     //Draw ista_result, fista_result, and input_data
     //描画先をBackendとして指定。ここでは画像に出力するためBitMapBackend
@@ -77,6 +83,12 @@ fn lasso_1sample_test() {
         irls_result.iter().enumerate().map(|(i, x)| (i, *x)),
         2,
         &BLACK,
+    );
+    chart.draw_series(point_series).unwrap();
+    let point_series = PointSeries::<_, _, Circle<_, _>, _>::new(
+        ssf_result.iter().enumerate().map(|(i, x)| (i, *x)),
+        2,
+        &ORANGE,
     );
     chart.draw_series(point_series).unwrap();
 }

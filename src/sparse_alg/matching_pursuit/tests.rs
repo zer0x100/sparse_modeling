@@ -1,4 +1,5 @@
 use crate::prelude::*;
+
 #[test]
 fn mp_1sample_test() {
     std::env::set_var("RUST_BACKTRACE", "1");
