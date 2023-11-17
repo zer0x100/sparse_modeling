@@ -28,3 +28,7 @@ pub mod prelude {
 
     pub use crate::cg::*;
 }
+
+pub libtest() {
+    println!("success to load");
+}
