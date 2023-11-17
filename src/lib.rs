@@ -5,7 +5,7 @@ mod lasso_alg;
 mod math_func;
 mod mk_matrix;
 mod sparse_alg;
-mod prelude {
+pub mod prelude {
     pub use crate::data_convert::*;
     pub use crate::gen_signal::*;
     pub use crate::lasso_alg::*;
