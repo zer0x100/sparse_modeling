@@ -1,8 +1,8 @@
-/*
-Lassoを解くアルゴリズム実装
-(1/2λ)||y - Ax||^(2) + ||x||_(1) <- minimize
-}}
- */
+//! # Lasso Alg
+//! 
+//! 'lasso_alg' is a collection of tools for solve lasso
+//! (minimize (1/2λ)||y - Ax||^(2) + ||x||_(1) <- minimize).
+
 mod fista;
 mod irls;
 mod ista;

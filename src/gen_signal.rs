@@ -1,5 +1,9 @@
+//! # Gen Signal
+//! 
+//! 'gen_signal' is a colletion of tools for making random signals for test.
 use crate::prelude::*;
 
+///Generate a 1d signal of specific length and pulses' locations and strength.
 #[allow(dead_code)]
 pub fn pulses_signal(size: usize, pulses: &[(usize, f64)]) -> Array1<f64> {
     let mut signal = Array::zeros(size);
@@ -11,6 +15,7 @@ pub fn pulses_signal(size: usize, pulses: &[(usize, f64)]) -> Array1<f64> {
     signal
 }
 
+///Generate a 1d signal of specific length, number of pulse, the range of strength.
 #[allow(dead_code)]
 pub fn rand_pulses_signal(
     rng: &mut ThreadRng,

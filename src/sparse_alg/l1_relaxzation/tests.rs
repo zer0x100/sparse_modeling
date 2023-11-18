@@ -86,6 +86,7 @@ fn l1_relax_1sample_test() {
     chart.draw_series(point_series).unwrap();
 }
 
+/* Average Test commented out because it takes long time.
 #[test]
 fn l1_relax_average_test() {
     //set parameters
@@ -266,3 +267,4 @@ fn l1_relax_average_test() {
     );
     chart.draw_series(line_series).unwrap();
 }
+ */

@@ -1,3 +1,6 @@
+//! # Sparse Alg
+//! 
+//! 'sparse_alg' is a collection of algorithms for calculate sparse solutions
 mod l1_relaxzation;
 mod matching_pursuit;
 

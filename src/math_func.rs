@@ -1,6 +1,9 @@
+//! # Math Func
+//! 
+//! 'math_func' is a collection of mathamtic functions.
 use crate::prelude::*;
 
-//soft theresholding function
+///Soft theresholding function.
 pub fn st(lambda: f64, x: f64) -> f64 {
     if x.abs() <= lambda {
         return 0.;
@@ -11,7 +14,7 @@ pub fn st(lambda: f64, x: f64) -> f64 {
     x + lambda
 }
 
-//st for Array1
+///Soft thresholding function for Array1<f64>.
 pub fn st_array1(lambda: f64, x: &Array1<f64>) -> Array1<f64> {
     let mut y = x.clone();
     y.iter_mut().for_each(|v| {
@@ -20,11 +23,22 @@ pub fn st_array1(lambda: f64, x: &Array1<f64>) -> Array1<f64> {
     y
 }
 
+///Operator l2 norm for Array2<f64>.
 pub fn matrix_l2(mat: &Array2<f64>) -> f64 {
     let (_, s, _) = mat.svd(false, false).unwrap();
     s.norm_max()
 }
 
+///Mutal coherence for Array2<f64>.
+/// 
+/// # Examples
+/// 
+/// ```
+/// use ndarray::array;
+/// 
+///let a = array![[1., 1., 1.], [1., 2., 3.],];
+///assert_eq!(0.9899494936611665, sparse_modeling::math_func::mutal_coherence(&a));
+/// ```
 #[allow(dead_code)]
 pub fn mutal_coherence(mat: &Array2<f64>) -> f64 {
     let mut mat_sub = mat.clone();
@@ -36,6 +50,15 @@ pub fn mutal_coherence(mat: &Array2<f64>) -> f64 {
     gram.norm_max()
 }
 
+///Babel function for Array2<f64>.
+/// 
+/// # Examples
+/// 
+/// ```
+///use ndarray::array;
+///let a = array![[1., 1., 1.], [1., 2., 3.],];
+///assert_eq!(0.9899494936611665, sparse_modeling::math_func::babel_func(&a, 1).unwrap());
+/// ```
 #[allow(dead_code)]
 pub fn babel_func(mat: &Array2<f64>, p: usize) -> Result<f64> {
     if mat.shape()[1] <= p {
@@ -61,6 +84,34 @@ pub fn babel_func(mat: &Array2<f64>, p: usize) -> Result<f64> {
     Ok(max)
 }
 
+///Normalize columns of mat(Array2<f64>).
+/// 
+/// # Examples
+/// 
+/// ```
+/// use ndarray::array;
+/// 
+///let arr = array![[1., 2., 3.], [2., 5., 7.],];
+///let arr = sparse_modeling::math_func::normalize_columns(&arr).unwrap();
+///assert_eq!(
+///    arr,
+///    array![
+///        [
+///            1. / 5.0f64.powf(0.5),
+///            2. / 29.0f64.powf(0.5),
+///            3. / 58.0f64.powf(0.5)
+///        ],
+///        [
+///            2. / 5.0f64.powf(0.5),
+///            5. / 29.0f64.powf(0.5),
+///            7. / 58.0f64.powf(0.5)
+///        ],
+///    ]
+///);
+/// ```
+/// 
+/// # Errors
+/// if 0 column exists return Err.
 #[allow(dead_code)]
 pub fn normalize_columns(mat: &Array2<f64>) -> Result<Array2<f64>> {
     let mut result_mat = mat.clone();
@@ -77,7 +128,7 @@ pub fn normalize_columns(mat: &Array2<f64>) -> Result<Array2<f64>> {
     Ok(result_mat)
 }
 
-//least suqres method with limitation of support
+///Least suqres method with limitation of support
 pub fn lsm_with_support(
     mat: &Array2<f64>,
     y: &Array1<f64>,
@@ -111,7 +162,21 @@ pub fn lsm_with_support(
     Ok(x)
 }
 
-//integrate columns into 2d-array
+///Integrate columns into 2d-array
+/// 
+/// # Examples
+/// 
+/// ```
+/// use ndarray::array;
+/// 
+///let arr = array![0., 1.];
+///let arr2 = array![2., 3.];
+///let arr3 = array![4., 5.];
+///assert_eq!(
+///    sparse_modeling::math_func::columns_to_2darray(2, [arr, arr2, arr3].into_iter()).unwrap(),
+///    array![[0., 2., 4.], [1., 3., 5.],]
+///);
+///``` 
 pub fn columns_to_2darray<I: Iterator<Item = Array1<f64>>>(
     size: usize,
     columns: I,
@@ -127,6 +192,17 @@ pub fn columns_to_2darray<I: Iterator<Item = Array1<f64>>>(
     Ok(result)
 }
 
+///Output pseudo inverse of input Array2<f64>.
+/// 
+/// # Examples
+/// 
+/// ```
+/// use ndarray::array;
+/// use ndarray_linalg::{Norm, Inverse};
+/// 
+///let a = array![[1., 3.], [1., 2.]];
+///assert!((sparse_modeling::math_func::pseudo_inverse(&a).unwrap() - a.inv().unwrap()).norm_l2() < 1e-8);
+///```
 pub fn pseudo_inverse(mat: &Array2<f64>) -> Result<Array2<f64>> {
     if mat.shape()[0] < 1 || mat.shape()[1] < 1 {
         return Err(anyhow!("mat is empty(row size or column size is zeo."));
@@ -147,6 +223,20 @@ pub fn pseudo_inverse(mat: &Array2<f64>) -> Result<Array2<f64>> {
     Ok(vt.t().dot(&sv_inverse.dot(&u.t())))
 }
 
+///Support distance
+/// S1: vec1's support. S2: vec2's support.
+/// return |(S1 & S2)| / max(|S1|, |S2|)
+/// err_range is eps. if a is less than err_range. we treat a as zero.
+/// 
+/// # Examples
+/// 
+/// ```
+/// use ndarray::array;
+/// 
+/// let a = array![1., 2., 0., 5., 0.];
+/// let b = array![0., 3., 0., 4., 2.];
+/// assert!((sparse_modeling::math_func::support_distance(&a, &b, 1e-10).unwrap() - 0.33333333333333).abs() < 1e-8);
+///```
 #[allow(dead_code)]
 pub fn support_distance(vec1: &Array1<f64>, vec2: &Array1<f64>, err_range: f64) -> Result<f64> {
     if vec1.len() != vec2.len() {
@@ -170,6 +260,24 @@ pub fn support_distance(vec1: &Array1<f64>, vec2: &Array1<f64>, err_range: f64) 
     Ok(1. - supp1_and_supp2.len() as f64 / cmp::max(supp1.len(), supp2.len()) as f64)
 }
 
+///Return Support of input Array1<f64>
+///err_range is eps. if a is less than err_range. we treat a as zero.
+/// 
+/// # Examples
+/// 
+/// ```
+/// use ndarray::array;
+/// 
+/// let a = array![1., 2., 0., 5., 0.];
+/// let supp = sparse_modeling::math_func::support(&a, 1e-10);
+/// assert!(
+///     supp.contains(&0)
+///         && supp.contains(&1)
+///         && !supp.contains(&2)
+///         && supp.contains(&3)
+///         && !supp.contains(&4)
+/// );
+/// ```
 #[allow(dead_code)]
 pub fn support(vec: &Array1<f64>, err_range: f64) -> HashSet<usize> {
     let mut supp = HashSet::new();
@@ -181,6 +289,8 @@ pub fn support(vec: &Array1<f64>, err_range: f64) -> HashSet<usize> {
     supp
 }
 
+///L2 relative error of two Array2<f64> inputs
+/// return ||exact_x - estimated_x||_2 / ||exact_x||_2
 #[allow(dead_code)]
 pub fn l2_relative_err(exact_x: &Array1<f64>, estimated_x: &Array1<f64>) -> Result<f64> {
     if exact_x.len() != estimated_x.len() {
@@ -204,6 +314,7 @@ pub fn l2_relative_err(exact_x: &Array1<f64>, estimated_x: &Array1<f64>) -> Resu
     Ok(diff_norm / exact_x_norm)
 }
 
+/// judge whether (mat, y) is under estimated system
 pub fn is_underestimated_sys(mat: &Array2<f64>, y: &Array1<f64>) -> Result<()> {
     if mat.shape()[0] != y.shape()[0] || mat.shape()[0] > mat.shape()[1] {
         return Err(anyhow!(format!(
@@ -217,58 +328,3 @@ pub fn is_underestimated_sys(mat: &Array2<f64>, y: &Array1<f64>) -> Result<()> {
     Ok(())
 }
 
-#[cfg(test)]
-mod tests {
-
-    use crate::prelude::*;
-
-    #[test]
-    fn math_func_test() {
-        std::env::set_var("RUST_BACKTRACE", "1");
-
-        let a = array![[1., 1., 1.], [1., 2., 3.],];
-        assert_eq!(0.9899494936611665, mutal_coherence(&a));
-        assert_eq!(0.9899494936611665, babel_func(&a, 1).unwrap());
-
-        let arr = array![0., 1.];
-        let arr2 = array![2., 3.];
-        let arr3 = array![4., 5.];
-        assert_eq!(
-            columns_to_2darray(2, [arr, arr2, arr3].into_iter()).unwrap(),
-            array![[0., 2., 4.], [1., 3., 5.],]
-        );
-
-        let arr = array![[1., 2., 3.], [2., 5., 7.],];
-        let arr = normalize_columns(&arr).unwrap();
-        assert_eq!(
-            arr,
-            array![
-                [
-                    1. / 5.0f64.powf(0.5),
-                    2. / 29.0f64.powf(0.5),
-                    3. / 58.0f64.powf(0.5)
-                ],
-                [
-                    2. / 5.0f64.powf(0.5),
-                    5. / 29.0f64.powf(0.5),
-                    7. / 58.0f64.powf(0.5)
-                ],
-            ]
-        );
-
-        let a = array![[1., 3.], [1., 2.]];
-        assert!((pseudo_inverse(&a).unwrap() - a.inv().unwrap()).norm_l2() < 1e-8);
-
-        let a = array![1., 2., 0., 5., 0.];
-        let supp = support(&a, 1e-10);
-        assert!(
-            supp.contains(&0)
-                && supp.contains(&1)
-                && !supp.contains(&2)
-                && supp.contains(&3)
-                && !supp.contains(&4)
-        );
-        let b = array![0., 3., 0., 4., 2.];
-        assert!((support_distance(&a, &b, 1e-10).unwrap() - 0.33333333333333).abs() < 1e-8);
-    }
-}

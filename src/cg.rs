@@ -1,3 +1,6 @@
+//! # CG
+//! 
+//! conjugate gradient algorithm
 use crate::prelude::*;
 
 pub fn conjugate_gradient(
@@ -46,5 +49,3 @@ pub fn conjugate_gradient(
     Ok(x)
 }
 
-#[test]
-fn cgtest() {}

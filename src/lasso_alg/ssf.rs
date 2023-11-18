@@ -1,3 +1,6 @@
+//! # SSF
+//! 
+//! Separatable surrogate functional algorithm for LASSO
 use crate::prelude::*;
 
 pub struct LassoSSF {
