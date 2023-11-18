@@ -31,12 +31,3 @@ mod prelude {
 
     pub use crate::cg::*;
 }
-pub mod prelude_for_use {
-    pub use crate::gen_signal::*;
-    pub use crate::lasso_alg::*;
-    pub use crate::math_func::*;
-    pub use crate::mk_matrix::*;
-    pub use crate::sparse_alg::*;
-
-    pub use crate::cg::*;
-}
