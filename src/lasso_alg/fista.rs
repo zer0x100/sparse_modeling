@@ -29,7 +29,7 @@ impl LassoAlg for LassoFista {
         }
 
         //initialization
-        let mut x = mat.t().dot(y);
+        let mut x = ArrayBase::zeros(mat.shape()[1]);
         let mut prev_x;
         let mut z = mat.t().dot(y);
         let mut prev_z;
