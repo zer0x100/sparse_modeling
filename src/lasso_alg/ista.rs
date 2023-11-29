@@ -29,7 +29,7 @@ impl LassoAlg for LassoIsta {
         }
 
         //initialization
-        let mut x = mat.t().dot(y);
+        let mut x = ArrayBase::zeros(mat.shape()[1]);
         let mut prev_x;
         let lipshitz = matrix_l2(&(mat.t().dot(mat))) / lambda;
 
