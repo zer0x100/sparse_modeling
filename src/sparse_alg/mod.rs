@@ -3,11 +3,13 @@
 //! 'sparse_alg' is a collection of algorithms for calculate sparse solutions
 mod l1_relaxzation;
 mod matching_pursuit;
+mod bayesian;
 
 use crate::prelude::*;
 
 pub use l1_relaxzation::{by_lasso::SparseAlgLasso, focuss::L1Focuss, L1Relaxzation};
 pub use matching_pursuit::{mp::Mp, omp::Omp, threshold_alg::ThresholdAlg, wmp::Wmp};
+pub use bayesian::rvm::Rvm;
 
 pub trait SparseAlg {
     fn solve(&self, mat: &Array2<f64>, y: &Array1<f64>) -> Result<Array1<f64>>;
