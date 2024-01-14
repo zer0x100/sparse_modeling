@@ -119,10 +119,13 @@ pub fn normalize_columns(mat: &Array2<f64>) -> Result<Array2<f64>> {
         let column = result_mat.slice_mut(s![..;1, i]);
         let l2_norm = column.norm_l2();
         if l2_norm == 0.0 {
-            return Err(anyhow!("0 column exits"));
+            for x in column {
+                *x = 0.;
+            }
+        } else {
+            for x in column {
+                *x = *x / l2_norm;
         }
-        for x in column {
-            *x = *x / l2_norm;
         }
     }
     Ok(result_mat)
