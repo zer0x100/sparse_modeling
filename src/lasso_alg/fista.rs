@@ -3,6 +3,7 @@ use crate::prelude::*;
 pub struct LassoFista {
     iter_num: usize,
     threshold: f64,
+    lipshitz: Option<f64>,
 }
 
 impl LassoFista {
@@ -11,12 +12,21 @@ impl LassoFista {
         Self {
             iter_num,
             threshold,
+            lipshitz: None,
         }
     }
     #[allow(dead_code)]
     pub fn set(&mut self, iter_num: usize, threshold: f64) {
         self.iter_num = iter_num;
         self.threshold = threshold;
+    }
+    #[allow(dead_code)]
+    pub fn set_lipshitz(&mut self, lipshitz: f64) {
+        self.lipshitz = Some(lipshitz)
+    }
+    #[allow(dead_code)]
+    pub fn lipshitz_to_none(&mut self) {
+        self.lipshitz = None;
     }
 }
 
@@ -33,9 +43,14 @@ impl LassoAlg for LassoFista {
         let mut prev_x;
         let mut z = mat.t().dot(y);
         let mut prev_z;
-        let (_, mut s, _) = mat.svd(false, false).unwrap();
-        s.iter_mut().for_each(|v| *v = *v * *v);
-        let lipshitz = s.norm_max() / lambda;
+        let lipshitz = if let Some(lip) = self.lipshitz {
+            lip / lambda
+        } else {
+            let (_, mut s, _) = mat.svd(false, false).unwrap();
+            s.iter_mut().for_each(|v| *v = *v * *v);
+            s.norm_max() / lambda
+        };
+
         let mut beta = 0.;
         let mut prev_beta;
 
