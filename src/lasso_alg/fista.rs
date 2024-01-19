@@ -44,7 +44,7 @@ impl LassoAlg for LassoFista {
         let mut z = mat.t().dot(y);
         let mut prev_z;
         let lipshitz = if let Some(lip) = self.lipshitz {
-            lip / lambda
+            lip
         } else {
             let (_, mut s, _) = mat.svd(false, false).unwrap();
             s.iter_mut().for_each(|v| *v = *v * *v);
