@@ -11,7 +11,7 @@ fn lasso_1sample_test() {
     let output_data = matrix.dot(&input_data);
 
     let lambda = 1e-2;
-    let iter_num = 1000;
+    let iter_num = 500;
     let threshold = 1e-20;
     let supp_err_range = 1e-2;
     let lasso_ista = LassoIsta::new(iter_num, threshold);

@@ -33,7 +33,9 @@ impl LassoAlg for LassoFista {
         let mut prev_x;
         let mut z = mat.t().dot(y);
         let mut prev_z;
-        let lipshitz = matrix_l2(&mat.t().dot(mat)) / lambda;
+        let (_, mut s, _) = mat.svd(false, false).unwrap();
+        s.iter_mut().for_each(|v| *v = *v * *v);
+        let lipshitz = s.norm_max() / lambda;
         let mut beta = 0.;
         let mut prev_beta;
 
