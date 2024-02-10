@@ -3,16 +3,18 @@ use crate::prelude::*;
 
 pub struct Omp {
     threshold: f64,
+    iter_num: usize,
 }
 
 impl Omp {
     #[allow(dead_code)]
-    pub fn new(threshold: f64) -> Self {
-        Self { threshold }
+    pub fn new(threshold: f64, iter_num: usize) -> Self {
+        Self { threshold, iter_num }
     }
     #[allow(dead_code)]
-    pub fn set(&mut self, threshold: f64) {
+    pub fn set(&mut self, threshold: f64, iter_num: usize) {
         self.threshold = threshold;
+        self.iter_num = iter_num;
     }
 }
 
@@ -29,7 +31,7 @@ impl SparseAlg for Omp {
         let mut r = y.clone();
         let mut support = HashSet::new();
 
-        for _ in 0..mat.shape()[1] {
+        for _ in 0..std::cmp::min(mat.shape()[1], self.iter_num) {
             //rの射影が最大となる列探索
             let (target_idx, _) = mat_normalized
                 .t()
