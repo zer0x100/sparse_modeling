@@ -20,7 +20,7 @@ fn mp_1sample_test() {
     let wmp_result = wmp.solve(&matrix, &output_data).unwrap();
     let mp = Mp::new(threshold, iter_num);
     let mp_result = mp.solve(&matrix, &output_data).unwrap();
-    let omp = Omp::new(threshold);
+    let omp = Omp::new(threshold, 100);
     let omp_result = omp.solve(&matrix, &output_data).unwrap();
 
     println!(
@@ -110,7 +110,7 @@ fn mp_average_test() {
     let wmp =
         Wmp::new(threshold, iter_num, 0.5).expect("failed to create wmp(weak matching pursuit)");
     let mp = Mp::new(threshold, iter_num);
-    let omp = Omp::new(threshold);
+    let omp = Omp::new(threshold, 100);
 
     //ThresholdAlg, Wmp, Mp, Ompの順で結果を格納
     let mut supp_dist_list = Vec::<(usize, [f64; 4])>::new();
